@@ -65,8 +65,8 @@ namespace GeneticChess
         public Bishop(bool iswhite)
         {
             IsWhite = iswhite;
-            if (iswhite) { PieceImage = GetImage(500, 75, 200, 200); }
-            else { PieceImage = GetImage(500, 150, 200, 200); }
+            if (iswhite) { PieceImage = GetImage(485, 55, 240, 240); }
+            else { PieceImage = GetImage(485, 340, 240, 240); }
         }
     }
     class Rook : Piece
@@ -74,8 +74,8 @@ namespace GeneticChess
         public Rook(bool iswhite)
         {
             IsWhite = iswhite;
-            if (iswhite) { PieceImage = GetImage(295, 90, 200, 200); }
-            else { PieceImage = GetImage(295, 370, 200, 200); }
+            if (iswhite) { PieceImage = GetImage(285, 90, 220, 220); }
+            else { PieceImage = GetImage(285, 365, 220, 220); }
         }
     }
     class Queen : Piece
@@ -83,8 +83,8 @@ namespace GeneticChess
         public Queen(bool iswhite)
         {
             IsWhite = iswhite;
-            if (iswhite) { PieceImage = GetImage(85, 400, 200, 200); }
-            else { PieceImage = GetImage(165, 400, 200, 200); }
+            if (iswhite) { PieceImage = GetImage(45, 645, 282, 282); }
+            else { PieceImage = GetImage(469, 645, 282, 282); }
         }
     }
     class King : Piece
@@ -92,8 +92,8 @@ namespace GeneticChess
         public King(bool iswhite)
         {
             IsWhite = iswhite;
-            if (iswhite) { PieceImage = GetImage(165, 400, 200, 200); }
-            else { PieceImage = GetImage(385, 400, 200, 200); }
+            if (iswhite) { PieceImage = GetImage(250, 610, 290, 290); }
+            else { PieceImage = GetImage(677, 610, 290, 290); }
         }
     }
     class Empty : Piece
