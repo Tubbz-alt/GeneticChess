@@ -13,7 +13,12 @@ namespace GeneticChess
 {
     public partial class Form1 : Form
     {
+        int[] priorSquare { get; set; }
+        int[] currentSquare { get; set; }
+
         private Panel[,] BoardPanel = new Panel[8, 8];
+        private Panel[,] BlankPanel = new Panel[8, 8];
+
         Board ActiveBoard = new Board();
         private int tilesize = 50;
         public Form1()
@@ -28,20 +33,13 @@ namespace GeneticChess
                         Size = new Size(tilesize, tilesize),
                         Location = new Point(tilesize * i, tilesize * ii)
                     };
-                    
-                    var request = WebRequest.Create(ActiveBoard.Pieces[i, ii].PictureURL);
-                    //set request to a different picture for a diff 
 
-                    using (var response = request.GetResponse())
-                    using (var stream = response.GetResponseStream())
+                    newPanel.Click += newPanel_Click;
+                    newPanel.BackgroundImageLayout = ImageLayout.Center;
+                    if (!(ActiveBoard.Pieces[ii, i] is Empty))
                     {
-                        Bitmap b = Bitmap.FromStream(stream) as Bitmap;
-                        b.MakeTransparent(Color.White);
-                        b = new Bitmap(b, new Size(30, 30));
-                        Image image = b as Image;
-                        newPanel.BackgroundImageLayout = ImageLayout.Center;
-                        newPanel.BackgroundImage = image;
-                    };
+                        newPanel.BackgroundImage = ActiveBoard.Pieces[ii, i].PieceImage;
+                    }
 
                     //Add panel to controls
                     Controls.Add(newPanel);
@@ -55,6 +53,31 @@ namespace GeneticChess
                         newPanel.BackColor = ii % 2 != 0 ? Color.White : Color.Black;
                 }
             }
+        }
+
+        void newPanel_Click(object sender, EventArgs e)
+        {
+            Panel p = sender as Panel;
+            priorSquare = currentSquare;
+            currentSquare = new int[] { p.Location.X / tilesize, p.Location.Y / tilesize };
+            PanelUpdate();
+        }
+
+        void PanelUpdate()
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int ii = 0; ii < 8; ii++)
+                {
+                    var p = BoardPanel[i, ii];
+                    if (i % 2 == 0)
+                        p.BackColor = ii % 2 != 0 ? Color.Black : Color.White;
+                    else
+                        p.BackColor = ii % 2 != 0 ? Color.White : Color.Black;
+                }
+            }
+            if (priorSquare != null) { BoardPanel[priorSquare[0], priorSquare[1]].BackColor = Color.Red; }
+            BoardPanel[currentSquare[0], currentSquare[1]].BackColor = Color.Green;
         }
     }
 }
