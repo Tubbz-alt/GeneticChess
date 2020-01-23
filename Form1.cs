@@ -19,11 +19,12 @@ namespace GeneticChess
         private Panel[,] BoardPanel = new Panel[8, 8];
         private Panel[,] BlankPanel = new Panel[8, 8];
 
-        Board ActiveBoard = new Board();
+        Board ActiveBoard = new Board(new Player(true), new Player(false), new Piece[8, 8], true);
         private int tilesize = 50;
         public Form1()
         {
             InitializeComponent();
+            ActiveBoard.Pieces = Board.initBoard(ActiveBoard);
             for (int i = 0; i < 8; i++)
             {
                 for (int ii = 0; ii < 8; ii++)
@@ -53,6 +54,31 @@ namespace GeneticChess
                         newPanel.BackColor = ii % 2 != 0 ? Color.White : Color.Black;
                 }
             }
+            Button button = new Button
+            {
+                Size = new Size(tilesize * 2, tilesize / 2),
+                Location = new Point(tilesize * 3, tilesize * 8),
+                Text = "Move"
+            };
+            button.Click += Button_Click;
+            Controls.Add(button);
+        }
+
+        private void Button_Click(object sender, EventArgs e)
+        {
+            if (!(currentSquare is null && priorSquare is null))
+            {
+                Board board = null;
+                try
+                {
+                    if (ActiveBoard.WTurn != ActiveBoard.Pieces[priorSquare[1], priorSquare[0]].Player.IsW) { throw new Exception("Not your turn"); }
+                    board = ActiveBoard.Pieces[priorSquare[1], priorSquare[0]].Move(ActiveBoard, currentSquare[1], currentSquare[0]);
+                }
+                catch(Exception ex) { MessageBox.Show("Invalid move: " + ex.ToString()); return; }
+                ActiveBoard = board;
+                PanelUpdate();
+                //ActiveBoard.WTurn = !ActiveBoard.WTurn;
+            }
         }
 
         void newPanel_Click(object sender, EventArgs e)
@@ -74,6 +100,7 @@ namespace GeneticChess
                         p.BackColor = ii % 2 != 0 ? Color.Black : Color.White;
                     else
                         p.BackColor = ii % 2 != 0 ? Color.White : Color.Black;
+                    p.BackgroundImage = ActiveBoard.Pieces[ii, i].PieceImage;
                 }
             }
             if (priorSquare != null) { BoardPanel[priorSquare[0], priorSquare[1]].BackColor = Color.Red; }
