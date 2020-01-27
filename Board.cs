@@ -15,6 +15,8 @@ namespace GeneticChess
         public bool Stale = false;
         public bool WCheck = false;
         public bool BCheck = false;
+        public int MoveNumber = 0;
+        public string Moves = "";
         public Board(Player p1, Player p2, Piece[,] pieces, bool wturn)
         {
             P1 = p1; P2 = p2; Pieces = pieces; WTurn = wturn;
@@ -64,6 +66,39 @@ namespace GeneticChess
             if (isW) { if (WCheck) { return true; } }
             else { if (BCheck) { return true; } }
             return false;
+        }
+        public string ChessNotation(Piece p, int fromx, int fromy, int tox, int toy)
+        {
+            string temp = string.Empty;
+            temp = PieceString(p) + NumLetter(fromx) + (fromy + 1);
+            temp += " " + NumLetter(tox) + (toy + 1);
+            return temp;
+        }
+        private char NumLetter(int i)
+        {
+            if (i > 8 || i < 1) { throw new Exception("Invalid character input"); }
+            switch (i)
+            {
+                case 1: return 'A';
+                case 2: return 'B';
+                case 3: return 'C';
+                case 4: return 'D';
+                case 5: return 'E';
+                case 6: return 'F';
+                case 7: return 'G';
+                case 8: return 'H';
+            }
+            return '$';
+        }
+        private string PieceString(Piece p)
+        {
+            if (p is Pawn) { return ""; }
+            if (p is Rook) { return "R"; }
+            if (p is Queen) { return "Q"; }
+            if (p is King) { return "K"; }
+            if (p is Bishop) { return "B"; }
+            if (p is Knight) { return "N"; }
+            throw new Exception("Invalid piece input");
         }
 
         /// <summary>
