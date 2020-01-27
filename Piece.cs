@@ -64,6 +64,7 @@ namespace GeneticChess
         public override Board Move(Board b, int toX, int toY)
         {
             Board board = Serializer.DeepClone(b);
+            int prex = PosX, prey = PosY;
             bool move = true;
             if (board.Pieces[toX, toY] is Empty || board.Pieces[toX, toY].Player.IsW != Player.IsW)
             {
@@ -115,7 +116,8 @@ namespace GeneticChess
             //Promotion
             if (PosX == 7 || PosX == 0)
             { board.Pieces.SetValue(new Queen(Player, PosX, PosY), new int[] { PosX, PosY }); }
-
+            board.MoveNumber++;
+            board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
         }
     }
@@ -135,6 +137,7 @@ namespace GeneticChess
         public override Board Move(Board b, int toX, int toY)
         {
             Board board = Serializer.DeepClone(b);
+            int prex = PosX, prey = PosY;
             if (board.Pieces[toX, toY] is Empty || board.Pieces[toX, toY].Player.IsW != Player.IsW)
             {
                 bool throughX = false, throughY = false;
@@ -167,6 +170,8 @@ namespace GeneticChess
                 if (throughX || throughY) { throw new Exception("Rook can't move through pieces"); }
             }
             else { throw new Exception("Rook can't move on own pieces"); }
+            board.MoveNumber++;
+            board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
         }
     }
@@ -186,6 +191,7 @@ namespace GeneticChess
         public override Board Move(Board b, int toX, int toY)
         {
             Board board = Serializer.DeepClone(b);
+            int prex = PosX, prey = PosY;
             if (board.Pieces[toX, toY] is Empty || board.Pieces[toX, toY].Player.IsW != Player.IsW)
             {
                 bool L = false;
@@ -200,6 +206,8 @@ namespace GeneticChess
                 else { throw new Exception("Failure of knight move"); }
             }
             else { throw new Exception("Knight can't move on own pieces"); }
+            board.MoveNumber++;
+            board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
         }
     }
@@ -228,6 +236,7 @@ namespace GeneticChess
                 { throw new Exception("Failure of bishop move"); }
             }
             Board board = Serializer.DeepClone(b);
+            int prex = PosX, prey = PosY;
             if (board.Pieces[toX, toY] is Empty || board.Pieces[toX, toY].Player.IsW != Player.IsW)
             {
                 bool throughPiece = false;
@@ -257,6 +266,8 @@ namespace GeneticChess
                 else { throw new Exception("Failure of bishop move"); }
             }
             else { throw new Exception("Bishop can't move on own pieces"); }
+            board.MoveNumber++;
+            board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
         }
     }
@@ -276,6 +287,7 @@ namespace GeneticChess
         public override Board Move(Board b, int toX, int toY)
         {
             bool rMove = true; bool bMove = true;
+            int prex = PosX, prey = PosY;
             Board board = Serializer.DeepClone(b);
             try
             {
@@ -311,6 +323,8 @@ namespace GeneticChess
                 }
             }
             board.WTurn = !board.WTurn;
+            board.MoveNumber++;
+            board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
         }
     }
@@ -331,6 +345,7 @@ namespace GeneticChess
         public override Board Move(Board b, int toX, int toY)
         {
             Board board = Serializer.DeepClone(b);
+            int prex = PosX, prey = PosY;
             if (board.Pieces[toX, toY] is Empty || board.Pieces[toX, toY].Player.IsW != Player.IsW)
             {
                 //Castling
@@ -388,6 +403,8 @@ namespace GeneticChess
                 else { throw new Exception("Failure of king move"); }
             }
             else { throw new Exception("Failure of king move"); }
+            board.MoveNumber++;
+            board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
         }
     }
@@ -400,7 +417,7 @@ namespace GeneticChess
     {
         public Empty(int posX, int posY)
         {
-            PosX = posX; PosY = posY; Name = ".empty";
+            PosX = posX; PosY = posY; Name = "empty";
         }
         public override Board Move(Board board, int toX, int toY)
         {
