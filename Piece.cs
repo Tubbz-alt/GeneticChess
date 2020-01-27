@@ -334,8 +334,7 @@ namespace GeneticChess
             if (board.Pieces[toX, toY] is Empty || board.Pieces[toX, toY].Player.IsW != Player.IsW)
             {
                 //Castling
-                //Does not work in the traditional way where you can't castle when in danger
-                if (CanCastle && toX == PosX && toY == 2 || toY == 6)
+                if (toX == PosX && toY == 2 || toY == 6 && CanCastle && !b.Checks(Player.IsW))
                 {
                     if (toY == 2)
                     {
