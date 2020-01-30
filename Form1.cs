@@ -73,10 +73,13 @@ namespace GeneticChess
                 {
                     if (ActiveBoard.WTurn != ActiveBoard.Pieces[priorSquare[1], priorSquare[0]].Player.IsW) { throw new Exception("Not your turn"); }
                     board = ActiveBoard.Pieces[priorSquare[1], priorSquare[0]].Move(ActiveBoard, currentSquare[1], currentSquare[0]);
+
+                    if (board.Checks(ActiveBoard.WTurn)) { board = null; MessageBox.Show("Can't leave king in check"); }
                 }
                 catch(Exception ex) { MessageBox.Show("Invalid move: " + ex.ToString()); return; }
                 ActiveBoard = board;
                 PanelUpdate();
+                MessageBox.Show(board.Moves);
                 //ActiveBoard.WTurn = !ActiveBoard.WTurn;
             }
         }
