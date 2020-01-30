@@ -1,0 +1,92 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace GeneticChess
+{
+    class Genetics
+    {
+        public int PopSize { get; set; }
+        NN[] NNs {
+            get { return NNs; }
+            set {
+                if (value.Count() % 2 == 0) { NNs = value; }
+                else { throw new Exception("NNs's count must be divisible by 2"); }
+            }
+        }
+
+        public Genetics(bool Load)
+        {
+            NN[] NNs = new NN[PopSize];
+            for (int i = 0; i < PopSize; i++) { /*Initialize or load them*/ }
+        }
+        public void Evolve()
+        {
+            //Initialize first
+
+            //Compute fitness
+            NNs = Tournament();
+
+            //Crossover
+
+            //Mutation
+
+            //Fitness
+        }
+        //Quicksort!
+        public NN[] Tournament()
+        {
+
+            throw new NotImplementedException();
+        }
+        public NN Crossover(NN parent1, NN parent2)
+        {
+            var r = new Random();
+            NN child = new NN();
+            child.Init();
+            for (int i = 0; i < parent1.Layers.Count; i++)
+            {
+                int crossoverPointX = r.Next(0, parent1.Layers[i].Weights.GetLength(0));
+                int crossoverPointY = r.Next(0, parent1.Layers[i].Weights.GetLength(1));
+                for (int ii = 0; ii < parent1.Layers[i].Weights.GetLength(0); ii++)
+                {
+                    for (int iii = 0; iii < parent1.Layers[i].Weights.GetLength(1); iii++)
+                    {
+                        double gene = parent1.Layers[i].Weights[ii, iii];
+                        if (ii > crossoverPointX && iii > crossoverPointY)
+                        {
+                            gene = parent2.Layers[i].Weights[ii, iii];
+                        }
+                        child.Layers[i].Weights[ii, iii] = gene;
+                    }
+                }
+            }
+            return child;
+        }
+        public NN Mutation(NN patient, double probability, int lowercount)
+        {
+            var r = new Random();
+            if (r.NextDouble() < probability) { return patient; }
+            int mutationLayer = r.Next(0, patient.Layers.Count);
+            int mutationPointX = r.Next(0, patient.Layers[mutationLayer].Weights.GetLength(0));
+            int mutationPointY = r.Next(0, patient.Layers[mutationLayer].Weights.GetLength(1));
+            //Random mutation with Lecun initialization
+            patient.Layers[mutationLayer].Weights[mutationPointX, mutationPointY] 
+                = (r.NextDouble() > .5 ? -1 : 1) * r.NextDouble() * Math.Sqrt(3d / (double)(lowercount * lowercount));
+            return patient;
+        }
+        public NN[] GeneratePopulation(int popsize)
+        {
+            var nns = new NN[popsize];
+            for (int i = 0; i < popsize; i++)
+            {
+                var nn = new NN();
+                nn.Init();
+                nns[i] = nn;
+            }
+            return nns;
+        }
+    }
+}
