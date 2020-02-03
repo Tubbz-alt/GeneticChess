@@ -6,15 +6,16 @@ using System.Threading.Tasks;
 
 namespace GeneticChess
 {
-    class Quicksort
+    static class Quicksort
     {
-        private void Swap<T>(T[] array, int a, int b)
+        private static void Swap<T>(T[] array, int a, int b)
         {
             var intermediary = array[a];
             array[a] = array[b];
             array[b] = intermediary;
         }
-        int Partition(NN[] array, int min, int max)
+        //Pushes the better networks further down the array
+        private static int Partition(NN[] array, int min, int max)
         {
             NN pivot = array[(min + (max - min) / 2)];
             int i = min - 1;
@@ -29,7 +30,7 @@ namespace GeneticChess
                 Swap(array, i, j);
             } while (true);
         }
-        void Quick(NN[] array, int min, int max)
+        public static NN[] Quick(NN[] array, int min, int max)
         {
             if (min < max)
             {
@@ -37,6 +38,7 @@ namespace GeneticChess
                 Quick(array, min, pivot);
                 Quick(array, pivot + 1, max);
             }
+            return array;
         }
     }
 }
