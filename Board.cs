@@ -100,7 +100,10 @@ namespace GeneticChess
             if (p is Knight) { return "N"; }
             throw new Exception("Invalid piece input");
         }
-
+        public List<Board> GenerateBoards()
+        {
+            throw new NotImplementedException;
+        }
         /// <summary>
         /// Check if king is in check
         /// </summary>
