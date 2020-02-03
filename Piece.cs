@@ -16,7 +16,6 @@ namespace GeneticChess
         public int PosY { get; set; }
         public int LegalX { get; set; }
         public int LegalY { get; set; }
-        public int CVal { get; set; }
         public Image PieceImage { get; set; }
         public Player Player { get; set; }
         public abstract Board Move(Board b, int toX, int toY);
@@ -116,6 +115,7 @@ namespace GeneticChess
             //Promotion
             if (PosX == 7 || PosX == 0)
             { board.Pieces.SetValue(new Queen(Player, PosX, PosY), new int[] { PosX, PosY }); }
+            if (board.Checks(Player.IsW)) { throw new Exception("Can't leave king in check"); }
             board.MoveNumber++;
             board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
@@ -170,6 +170,7 @@ namespace GeneticChess
                 if (throughX || throughY) { throw new Exception("Rook can't move through pieces"); }
             }
             else { throw new Exception("Rook can't move on own pieces"); }
+            if (board.Checks(Player.IsW)) { throw new Exception("Can't leave king in check"); }
             board.MoveNumber++;
             board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
@@ -206,6 +207,7 @@ namespace GeneticChess
                 else { throw new Exception("Failure of knight move"); }
             }
             else { throw new Exception("Knight can't move on own pieces"); }
+            if (board.Checks(Player.IsW)) { throw new Exception("Can't leave king in check"); }
             board.MoveNumber++;
             board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
@@ -266,6 +268,7 @@ namespace GeneticChess
                 else { throw new Exception("Failure of bishop move"); }
             }
             else { throw new Exception("Bishop can't move on own pieces"); }
+            if (board.Checks(Player.IsW)) { throw new Exception("Can't leave king in check"); }
             board.MoveNumber++;
             board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
@@ -323,6 +326,7 @@ namespace GeneticChess
                 }
             }
             board.WTurn = !board.WTurn;
+            if (board.Checks(Player.IsW)) { throw new Exception("Can't leave king in check"); }
             board.MoveNumber++;
             board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
@@ -338,7 +342,6 @@ namespace GeneticChess
         public King(Player player, int posX, int posY)
         {
             Player = player; PosX = posX; PosY = posY; Name = "king"; LegalX = 1; LegalY = 1; CanCastle = true;
-            CVal = 99;
             if (player.IsW) { PieceImage = GetImage(250, 610, 290, 290); }
             else { PieceImage = GetImage(677, 610, 290, 290); }
         }
@@ -403,6 +406,7 @@ namespace GeneticChess
                 else { throw new Exception("Failure of king move"); }
             }
             else { throw new Exception("Failure of king move"); }
+            if (board.Checks(Player.IsW)) { throw new Exception("Can't leave king in check"); }
             board.MoveNumber++;
             board.Moves += board.MoveNumber + " " + board.ChessNotation(this, prey, prex, toY, toX) + "\n";
             return board;
