@@ -11,7 +11,7 @@ namespace GeneticChess
 {
     class NN
     {
-        static int Resolution = 28;
+        static int Resolution = 8;
         public int NumLayers = 3;
         public int INCount = 16;
         public int NCount = 8;
@@ -22,7 +22,7 @@ namespace GeneticChess
         public static double RMSDecay = .9;
         public static bool UseMomentum = false;
         public static bool UseRMSProp = true;
-
+        public int MaxMoves = 50;
         public double TrialNum = 0;
         public double AvgGradient = 0;
         public double PercCorrect = 0;
@@ -35,15 +35,33 @@ namespace GeneticChess
             INCount = incount; NCount = hidcount; ONCount = outcount; LearningRate = learningrate;
         }
         public NN() { }
-        public bool Vs(NN competitor)
+        public bool Vs(NN competitor, bool isW)
         {
-            throw new NotImplementedException();
+            Board Compitition = new Board(new Player(true), new Player(false), new Piece[8,8], true).initBoard();
+            int movecount = 0;
+            //Compete until a victor is decided or movecount is exceeded
+            while (!Compitition.WWin && !Compitition.BWin && movecount < MaxMoves)
+            {
+                //Ensure nothing goes wrong
+                if (Compitition is null) { break; }
+
+                if (isW == Compitition.WTurn) { Compitition = Move(Compitition, isW); }
+                else { Compitition = competitor.Move(Compitition, !isW); }
+                movecount++;
+            }
+            //Award win to the victor
+            if ((isW && Compitition.WWin) || (!isW && Compitition.BWin)) { return true; }
+            if ((!isW && Compitition.WWin) || (isW && Compitition.BWin)) { return false; }
+            //If stale winner is non-competitor by default
+            if (movecount < MaxMoves) { return true; }
+            //If it broke without anything happening something went wrong
+            throw new Exception("Unknown board state");
         }
-        public Board Move(Board board)
+        public Board Move(Board board, bool wTurn)
         {
             double maxscore = double.MinValue;
             Board bestBoard = null;
-            List<Board> possibilities = board.GenerateBoards();
+            List<Board> possibilities = board.GenerateBoards(wTurn);
             if (possibilities.Count == 0) { /*forfeit*/ }
             foreach (Board b in possibilities)
             {
@@ -65,17 +83,18 @@ namespace GeneticChess
                     if (p is Knight || p is Bishop) { input[i, ii] = 3; continue; }
                     if (p is Rook) { input[i, ii] = 5; continue; }
                     if (p is Queen) { input[i, ii] = 9; continue; }
-                    if (p is King) { input[i, ii] = double.MaxValue; continue; }
+                    if (p is King) { input[i, ii] = 99; continue; }
                     //Don't have to set empty piece = 0 b/c array initialization does it for me
                 }
             }
+            input = ActivationFunctions.Normalize(input, 8, 8);
             return Run(input);
         }
-        public void Init()
+        public NN Init()
         {
             Layers = new List<Layer>();
             int count = NCount;
-            int lowercount = Resolution;
+            int lowercount = Resolution * Resolution;
             Random r = new Random();
             for (int i = 0; i < NumLayers; i++)
             {
@@ -93,12 +112,13 @@ namespace GeneticChess
                     }
                 }
             }
+            return this;
         }
         public double Run(double[,] image)
         {
-            double[,] input = new double[28, 28];
+            double[,] input = new double[Resolution, Resolution];
             //Deepclone?
-            for (int i = 0; i < 28; i++) { for (int ii = 0; ii < 28; ii++) { input[i, ii] = image[i, ii]; } }
+            for (int i = 0; i < Resolution; i++) { for (int ii = 0; ii < Resolution; ii++) { input[i, ii] = image[i, ii]; } }
 
             //Forward
             for (int i = 0; i < Layers.Count; i++)
