@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Net;
+using System.Threading;
 
 namespace GeneticChess
 {
@@ -19,12 +20,11 @@ namespace GeneticChess
         private Panel[,] BoardPanel = new Panel[8, 8];
         private Panel[,] BlankPanel = new Panel[8, 8];
 
-        Board ActiveBoard = new Board(new Player(true), new Player(false), new Piece[8, 8], true);
+        Board ActiveBoard = new Board(new Player(true), new Player(false), new Piece[8, 8], true).initBoard();
         private int tilesize = 50;
         public Form1()
         {
             InitializeComponent();
-            ActiveBoard.Pieces = Board.initBoard(ActiveBoard);
             for (int i = 0; i < 8; i++)
             {
                 for (int ii = 0; ii < 8; ii++)
@@ -57,11 +57,19 @@ namespace GeneticChess
             Button button = new Button
             {
                 Size = new Size(tilesize * 2, tilesize / 2),
-                Location = new Point(tilesize * 3, tilesize * 8),
+                Location = new Point(tilesize * 2, tilesize * 8),
                 Text = "Move"
             };
+            Button button2 = new Button
+            {
+                Size = new Size(tilesize * 2, tilesize / 2),
+                Location = new Point(tilesize * 4, tilesize * 8),
+                Text = "Compete"
+            };
             button.Click += Button_Click;
+            button2.Click += Button2_Click;
             Controls.Add(button);
+            Controls.Add(button2);
         }
 
         private void Button_Click(object sender, EventArgs e)
@@ -82,6 +90,21 @@ namespace GeneticChess
                 MessageBox.Show(board.Moves);
                 //ActiveBoard.WTurn = !ActiveBoard.WTurn;
             }
+        }
+
+        private void Button2_Click(object sender, EventArgs e)
+        {
+            new Thread(() =>
+            {
+                NN nn1 = new NN().Init(); NN nn2 = new NN().Init();
+                while (!ActiveBoard.WWin && !ActiveBoard.BWin)
+                {
+                    ActiveBoard = nn1.Move(ActiveBoard, ActiveBoard.WTurn);
+                    Invoke((Action)delegate { PanelUpdate(); });
+                    ActiveBoard = nn2.Move(ActiveBoard, ActiveBoard.WTurn);
+                    Invoke((Action)delegate { PanelUpdate(); });
+                }
+            });
         }
 
         void newPanel_Click(object sender, EventArgs e)
@@ -107,7 +130,7 @@ namespace GeneticChess
                 }
             }
             if (priorSquare != null) { BoardPanel[priorSquare[0], priorSquare[1]].BackColor = Color.Red; }
-            BoardPanel[currentSquare[0], currentSquare[1]].BackColor = Color.Green;
+            if (currentSquare != null) { BoardPanel[currentSquare[0], currentSquare[1]].BackColor = Color.Green; }
         }
     }
 }
