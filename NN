@@ -27,6 +27,7 @@ namespace GeneticChess
         public double AvgGradient = 0;
         public double PercCorrect = 0;
         public double Error = 0;
+        public Player player { get; set; }
         public int Guess { get; set; }
 
         public NN(double momentspeed, double learningrate, int numlayers, int incount, int hidcount, int outcount)
@@ -79,14 +80,19 @@ namespace GeneticChess
                 {
                     //Set piece values equal to standard chess piece values
                     Piece p = board.Pieces[i, ii];
-                    if (p is Pawn) { input[i, ii] = 1; continue; }
-                    if (p is Knight || p is Bishop) { input[i, ii] = 3; continue; }
-                    if (p is Rook) { input[i, ii] = 5; continue; }
-                    if (p is Queen) { input[i, ii] = 9; continue; }
-                    if (p is King) { input[i, ii] = 99; continue; }
                     //Don't have to set empty piece = 0 b/c array initialization does it for me
+                    if (p is Empty) { continue; }
+                    if (p is Pawn) { input[i, ii] = 1; }
+                    if (p is Knight || p is Bishop) { input[i, ii] = 3; }
+                    if (p is Rook) { input[i, ii] = 5; }
+                    if (p is Queen) { input[i, ii] = 9; }
+                    if (p is King) { input[i, ii] = 99; }
+                    
+                    //Set opposite color piece values to negative
+                    if (p.Player.IsW != player.IsW) { input[i, ii] *= -1; }
                 }
             }
+            //Normalize everything
             input = ActivationFunctions.Normalize(input, 8, 8);
             return Run(input);
         }
