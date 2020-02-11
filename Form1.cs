@@ -14,6 +14,7 @@ namespace GeneticChess
 {
     public partial class Form1 : Form
     {
+        bool Run = true;
         int[] priorSquare { get; set; }
         int[] currentSquare { get; set; }
 
@@ -94,17 +95,25 @@ namespace GeneticChess
 
         private void Button2_Click(object sender, EventArgs e)
         {
+            var thread =
             new Thread(() =>
             {
+                var tempboard = Serializer.DeepClone(ActiveBoard);
                 NN nn1 = new NN().Init(); NN nn2 = new NN().Init();
-                while (!ActiveBoard.WWin && !ActiveBoard.BWin)
+                var p1 = new Player(true); var p2 = new Player(false);
+                nn1.player = p1; nn2.player = p2;
+
+                while (!tempboard.WWin && !tempboard.BWin)
                 {
-                    ActiveBoard = nn1.Move(ActiveBoard, ActiveBoard.WTurn);
-                    Invoke((Action)delegate { PanelUpdate(); });
-                    ActiveBoard = nn2.Move(ActiveBoard, ActiveBoard.WTurn);
-                    Invoke((Action)delegate { PanelUpdate(); });
+                    tempboard = nn1.Move(tempboard, tempboard.WTurn);
+                    Invoke((Action)delegate { ActiveBoard = Serializer.DeepClone(tempboard); PanelUpdate(); });
+
+                    ActiveBoard = nn2.Move(tempboard, tempboard.WTurn);
+                    Invoke((Action)delegate { ActiveBoard = Serializer.DeepClone(tempboard); PanelUpdate(); });
                 }
             });
+            thread.IsBackground = true;
+            thread.Start();
         }
 
         void newPanel_Click(object sender, EventArgs e)
