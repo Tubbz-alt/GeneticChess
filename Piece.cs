@@ -62,7 +62,7 @@ namespace GeneticChess
         }
         public override Board Move(Board b, int toX, int toY)
         {
-            Board board = Serializer.DeepClone(b);
+            var board = Serializer.DeepClone(b);
             int prex = PosX, prey = PosY;
             bool move = true;
             if (board.Pieces[toX, toY] is Empty || board.Pieces[toX, toY].Player.IsW != Player.IsW)
