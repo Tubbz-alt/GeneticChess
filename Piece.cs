@@ -19,6 +19,7 @@ namespace GeneticChess
         public Image PieceImage { get; set; }
         public Player Player { get; set; }
         public abstract Board Move(Board b, int toX, int toY);
+        public abstract List<Board> GenerateMoves(Board b);
         string PictureURL = "https://cdn5.vectorstock.com/i/1000x1000/15/29/chess-pieces-including-king-queen-rook-pawn-knight-vector-2621529.jpg";
         protected Image GetImage(int x1, int y1, int x2, int y2)
         {
@@ -59,6 +60,46 @@ namespace GeneticChess
             else { LegalX = 1; }
             if (player.IsW == true) { PieceImage = GetImage(85, 100, 200, 200); }
             else { PieceImage = GetImage(85, 385, 200, 200); }
+        }
+        public override List<Board> GenerateMoves(Board b)
+        {
+            var boards = new List<Board>();
+            int scale = Player.IsW ? -1 : 1;
+            for (int i = 1 * scale; i <= 2 * scale; i += scale)
+            {
+                for (int ii = -1 * scale; ii <= 1 * scale; ii += scale)
+                {
+                    //Ignore moves outside the board
+                    if (PosX + ii > 7 || PosY + i > 7) { continue; }
+
+                    //If moving sideways
+                    if (ii != 0) {
+                        //Can't move forward and sideways two steps
+                        if (i == 2) { continue; }
+                        //If an empty square check if can enpassed
+                        if (b.Pieces[PosY + i, PosX + ii] is Empty) {
+                            if (b.Pieces[PosY, PosX + ii] is Pawn && ((Pawn)b.Pieces[PosY, PosX + ii]).enPass)
+                            { goto addmove; }
+                            continue;
+                        }
+                        //If enemy piece can capture
+                        if (b.Pieces[PosY + i, PosX + ii].Player.IsW != Player.IsW) { goto addmove; }
+                    }
+                    //If it's moving forward one step
+                    if (i == 1) {
+                        //If there is nothing in front, it's legal
+                        if (b.Pieces[PosY + i, PosX + ii] is Empty) { goto addmove; }
+                    }
+                    //If it's moving enpassant, check if it hasn't moved and if interceptings squares are empty
+                    if (twoStep && b.Pieces[PosY + i, PosX + ii] is Empty && b.Pieces[PosY + 1, PosX + ii] is Empty)
+                    //If so, then it's legal
+                    { goto addmove; }
+
+                    addmove:
+                    boards.Add(Move(b, PosY + i, PosX + ii));
+                }
+            }
+            return boards;
         }
         public override Board Move(Board b, int toX, int toY)
         {
@@ -134,6 +175,21 @@ namespace GeneticChess
             if (player.IsW) { PieceImage = GetImage(285, 90, 220, 220); }
             else { PieceImage = GetImage(285, 365, 220, 220); }
         }
+        public override List<Board> GenerateMoves(Board b)
+        {
+            var boards = new List<Board>();
+            for (int i = -PosY; i <= 7 - PosY; i++)
+            {
+                for (int ii = -PosX; ii <= 7 - PosX; ii++)
+                {
+                    //If it reaches a piece, that is the furthest it can move
+                    if (!(b.Pieces[i, ii] is Empty)) { boards.Add(Move(b, PosY + i, PosX + ii)); break; }
+                    //If it's still empty then just add it
+                    boards.Add(Move(b, PosY + i, PosX + ii));
+                }
+            }
+            return boards;
+        }
         public override Board Move(Board b, int toX, int toY)
         {
             Board board = Serializer.DeepClone(b);
@@ -189,6 +245,21 @@ namespace GeneticChess
             if (player.IsW) { PieceImage = GetImage(700, 60, 230, 230); }
             else { PieceImage = GetImage(700, 350, 230, 230); }
         }
+        public override List<Board> GenerateMoves(Board b)
+        {
+            var boards = new List<Board>();
+            for (int i = -2; i <= 2; i += 2)
+            {
+                for (int ii = -2; ii <= 2; ii += 2)
+                {
+                    //If the knight is moving off the board or capturing a like-kind piece, it's invalid
+                    if (PosY + i > 7 || PosX + ii > 7) { continue; }
+                    if (b.Pieces[PosY + i, PosX + ii].Player.IsW == Player.IsW) { continue; }
+                    boards.Add(Move(b, PosY + i, PosX + ii));
+                }
+            }
+            return boards;
+        }
         public override Board Move(Board b, int toX, int toY)
         {
             Board board = Serializer.DeepClone(b);
@@ -226,6 +297,29 @@ namespace GeneticChess
             Player = player; PosX = posX; PosY = posY; Name = "Bishop";
             if (player.IsW) { PieceImage = GetImage(485, 55, 240, 240); }
             else { PieceImage = GetImage(485, 340, 240, 240); }
+        }
+        public override List<Board> GenerateMoves(Board b)
+        {
+            var boards = new List<Board>();
+            for (int i = -PosY; i < 7 - PosY; i++)
+            {
+                for (int ii = -PosX; ii < 7 - PosX; ii++)
+                {
+                    //If it reaches a piece, that is the furthest it can move
+                    if (!(b.Pieces[PosY + i, PosX + ii] is Empty)) { boards.Add(Move(b, PosY + i, PosX + ii)); break; }
+                    //If it's empty just add it
+                    boards.Add(Move(b, PosY + i, PosX + ii));
+                }
+                //Same process for the inverse proportional relationship of x/y
+                for (int ii = -PosX; ii < 7 - PosX; ii++)
+                {
+                    //If it reaches a piece, that is the furthest it can move
+                    if (!(b.Pieces[PosY + i, PosX + ii] is Empty)) { boards.Add(Move(b, PosY + i, PosX - ii)); break; }
+                    //If it's empty just add it
+                    boards.Add(Move(b, PosY + i, PosX + ii));
+                }
+            }
+            return boards;
         }
         public override Board Move(Board b, int toX, int toY)
         {
@@ -287,6 +381,12 @@ namespace GeneticChess
             if (player.IsW) { PieceImage = GetImage(45, 645, 282, 282); }
             else { PieceImage = GetImage(469, 645, 282, 282); }
         }
+        public override List<Board> GenerateMoves(Board b)
+        {
+            var boards = new List<Board>();
+
+            return boards;
+        }
         public override Board Move(Board b, int toX, int toY)
         {
             bool rMove = true; bool bMove = true;
@@ -344,6 +444,12 @@ namespace GeneticChess
             Player = player; PosX = posX; PosY = posY; Name = "king"; LegalX = 1; LegalY = 1; CanCastle = true;
             if (player.IsW) { PieceImage = GetImage(250, 610, 290, 290); }
             else { PieceImage = GetImage(677, 610, 290, 290); }
+        }
+        public override List<Board> GenerateMoves(Board b)
+        {
+            var boards = new List<Board>();
+
+            return boards;
         }
         public override Board Move(Board b, int toX, int toY)
         {
@@ -422,6 +528,10 @@ namespace GeneticChess
         public Empty(int posX, int posY)
         {
             PosX = posX; PosY = posY; Name = "empty";
+        }
+        public override List<Board> GenerateMoves(Board b)
+        {
+            throw new Exception("Can't generate moves for nothing");
         }
         public override Board Move(Board board, int toX, int toY)
         {
