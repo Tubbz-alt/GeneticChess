@@ -232,6 +232,21 @@ namespace GeneticChess
             }
             return Moves;
         }
+        public List<Board> GenMoves()
+        {
+            var boards = new List<Board>();
+            foreach (Piece p in Pieces)
+            {
+                var v = p.GenerateMoves(this);
+
+                foreach (Board b in v)
+                {
+                    //Need to check detect these before adding
+                    boards.Add(b);
+                }
+            }
+            return boards;
+        }
         /// <summary>
         /// Check if king is in check
         /// </summary>
