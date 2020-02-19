@@ -232,11 +232,13 @@ namespace GeneticChess
             }
             return Moves;
         }
-        public List<Board> GenMoves()
+        public List<Board> GenMoves(bool wturn)
         {
             var boards = new List<Board>();
             foreach (Piece p in Pieces)
             {
+                if (p is Empty || p.Player.IsW != wturn) { continue; }
+
                 var v = p.GenerateMoves(this);
 
                 foreach (Board b in v)
