@@ -178,14 +178,21 @@ namespace GeneticChess
         public override List<Board> GenerateMoves(Board b)
         {
             var boards = new List<Board>();
-            for (int i = -PosY; i <= 7 - PosY; i++)
+            for (int i = 0; i <= 7 - PosY; i++)
             {
-                for (int ii = -PosX; ii <= 7 - PosX; ii++)
+                for (int ii = 0; ii <= 7 - PosX; ii++)
                 {
+                    if (i == 0 && ii == 0) { continue; }
                     //If it reaches a piece, that is the furthest it can move
-                    if (!(b.Pieces[i, ii] is Empty)) { boards.Add(Move(b, PosY + i, PosX + ii)); break; }
+                    if (!(b.Pieces[PosX + ii, PosY + i] is Empty))
+                    {
+                        //If an enemy piece can move there
+                        if (b.Pieces[PosX + ii, PosY + i].Player.IsW != Player.IsW) { boards.Add(Move(b, PosX + ii, PosY + i)); }
+                        //If an ally piece can't move there
+                        break;
+                    }
                     //If it's still empty then just add it
-                    boards.Add(Move(b, PosY + i, PosX + ii));
+                    if (b.Pieces[PosX + ii, PosY + i].Player.IsW = Player.IsW) { boards.Add(Move(b, PosY + i, PosX + ii)); }
                 }
             }
             return boards;
@@ -250,12 +257,12 @@ namespace GeneticChess
             var boards = new List<Board>();
             for (int i = -2; i <= 2; i += 2)
             {
-                for (int ii = -2; ii <= 2; ii += 2)
+                for (int ii = -1; ii <= 1; ii += 2)
                 {
                     //If the knight is moving off the board or capturing a like-kind piece, it's invalid
-                    if (PosY + i > 7 || PosX + ii > 7) { continue; }
-                    if (b.Pieces[PosY + i, PosX + ii].Player.IsW == Player.IsW) { continue; }
-                    boards.Add(Move(b, PosY + i, PosX + ii));
+                    if (PosY + i > 7 || PosX + ii > 7  || PosY + i < 0 || PosX + ii < 0) { continue; }
+                    if (!(b.Pieces[PosX + ii, PosY + i] is Empty) && b.Pieces[PosX + ii, PosY + i].Player.IsW == Player.IsW) { continue; }
+                    boards.Add(Move(b, PosX + ii, PosY + i));
                 }
             }
             return boards;
@@ -384,6 +391,38 @@ namespace GeneticChess
         public override List<Board> GenerateMoves(Board b)
         {
             var boards = new List<Board>();
+            //I can't cast queen to another piece type, so I'm just copy-pasting the move-gen code from bishops and rooks
+
+            //Rook
+            for (int i = -PosY; i <= 7 - PosY; i++)
+            {
+                for (int ii = -PosX; ii <= 7 - PosX; ii++)
+                {
+                    //If it reaches a piece, that is the furthest it can move
+                    if (!(b.Pieces[i, ii] is Empty)) { boards.Add(Move(b, PosY + i, PosX + ii)); break; }
+                    //If it's still empty then just add it
+                    boards.Add(Move(b, PosY + i, PosX + ii));
+                }
+            }
+            //Bishop
+            for (int i = -PosY; i < 7 - PosY; i++)
+            {
+                for (int ii = -PosX; ii < 7 - PosX; ii++)
+                {
+                    //If it reaches a piece, that is the furthest it can move
+                    if (!(b.Pieces[PosY + i, PosX + ii] is Empty)) { boards.Add(Move(b, PosY + i, PosX + ii)); break; }
+                    //If it's empty just add it
+                    boards.Add(Move(b, PosY + i, PosX + ii));
+                }
+                //Same process for the inverse proportional relationship of x/y
+                for (int ii = -PosX; ii < 7 - PosX; ii++)
+                {
+                    //If it reaches a piece, that is the furthest it can move
+                    if (!(b.Pieces[PosY + i, PosX + ii] is Empty)) { boards.Add(Move(b, PosY + i, PosX - ii)); break; }
+                    //If it's empty just add it
+                    boards.Add(Move(b, PosY + i, PosX + ii));
+                }
+            }
 
             return boards;
         }
@@ -449,6 +488,31 @@ namespace GeneticChess
         {
             var boards = new List<Board>();
 
+            //If can castle check if it works
+            if (CanCastle)
+            {
+                Board temp, temp2;
+                try { temp = Move(b, PosY, PosX + 2); boards.Add(temp);  }
+                catch { }
+                try { temp2 = Move(b, PosY, PosX - 2); boards.Add(temp2);  }
+                catch { }
+            }
+
+            for (int i = -1; i <= 1; i++)
+            {
+                for (int ii = -1; ii <= 1; ii++)
+                {
+                    //Skip if it goes off the board
+                    if (PosX + ii > 7 || PosY + i > 7) { continue; }
+                    //If the desired location is empty or an enemy piece, it is [psuedo] legal
+                    if (b.Pieces[PosX, PosY] is Empty || b.Pieces[PosX, PosY].Player.IsW != Player.IsW) { boards.Add(Move(b, PosY + i, PosX + ii)); }
+                }
+
+
+                //*TODO*: check if it puts the king in check!
+
+
+            }
             return boards;
         }
         public override Board Move(Board b, int toX, int toY)
