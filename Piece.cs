@@ -186,13 +186,14 @@ namespace GeneticChess
                     //If it reaches a piece, that is the furthest it can move
                     if (!(b.Pieces[PosX + ii, PosY + i] is Empty))
                     {
-                        //If an enemy piece can move there
-                        if (b.Pieces[PosX + ii, PosY + i].Player.IsW != Player.IsW) { boards.Add(Move(b, PosX + ii, PosY + i)); }
-                        //If an ally piece can't move there
+                        //If an enemy piece can move there but not further
+                        if (b.Pieces[PosX + ii, PosY + i].Player.IsW != Player.IsW)
+                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + ii, PosY + i })); }
+                        //If an ally piece can't move there, nor further
                         break;
                     }
                     //If it's still empty then just add it
-                    if (b.Pieces[PosX + ii, PosY + i].Player.IsW = Player.IsW) { boards.Add(Move(b, PosY + i, PosX + ii)); }
+                    boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + ii, PosY + i })); 
                 }
             }
             return boards;
@@ -257,12 +258,16 @@ namespace GeneticChess
             var boards = new List<Board>();
             for (int i = -2; i <= 2; i += 2)
             {
-                for (int ii = -1; ii <= 1; ii += 2)
+                for (int ii = -2; ii <= 2; ii += 2)
                 {
-                    //If the knight is moving off the board or capturing a like-kind piece, it's invalid
+                    //If the knight is moving off the board it's invalid
                     if (PosY + i > 7 || PosX + ii > 7  || PosY + i < 0 || PosX + ii < 0) { continue; }
-                    if (!(b.Pieces[PosX + ii, PosY + i] is Empty) && b.Pieces[PosX + ii, PosY + i].Player.IsW == Player.IsW) { continue; }
-                    boards.Add(Move(b, PosX + ii, PosY + i));
+                    //If not moving in an L shape it's invalid
+                    if (Math.Abs(PosX - (PosX + ii)) + Math.Abs(PosY - (PosY + i)) == 3) { continue; }
+
+                    //If capturing an enemy or moving to an empty square, it's valid
+                    if (b.Pieces[PosX + ii, PosY + i] is Empty || b.Pieces[PosX + ii, PosY + i].Player.IsW != Player.IsW)
+                    { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + ii, PosY + i })); }
                 }
             }
             return boards;
@@ -308,22 +313,35 @@ namespace GeneticChess
         public override List<Board> GenerateMoves(Board b)
         {
             var boards = new List<Board>();
-            for (int i = -PosY; i < 7 - PosY; i++)
+            var bounds = new List<int[,]>();
+            //Up and to the right
+            bounds[0] = new int[,] { { 7 - PosX, 7 - PosY }, { 1, 1 } };
+            //Up and to the left
+            bounds[1] = new int[,] {{ PosX, 7 - PosY }, { 1, -1 } };
+            //Down and to the right
+            bounds[2] = new int[,] {{ 7 - PosX, PosY }, { -1, 1 } };
+            //Down and to the left
+            bounds[3] = new int[,] {{ PosX, PosY }, { -1, -1 } };
+
+            //Foreach bound
+            for (int bound = 0; bound < 3; bound++)
             {
-                for (int ii = -PosX; ii < 7 - PosX; ii++)
+                //Determine a max walkout distance and path to it
+                for (int i = PosX; i < Math.Abs(bounds[bound][0, 0]); i += bounds[bound][1, 0])
                 {
-                    //If it reaches a piece, that is the furthest it can move
-                    if (!(b.Pieces[PosY + i, PosX + ii] is Empty)) { boards.Add(Move(b, PosY + i, PosX + ii)); break; }
-                    //If it's empty just add it
-                    boards.Add(Move(b, PosY + i, PosX + ii));
-                }
-                //Same process for the inverse proportional relationship of x/y
-                for (int ii = -PosX; ii < 7 - PosX; ii++)
-                {
-                    //If it reaches a piece, that is the furthest it can move
-                    if (!(b.Pieces[PosY + i, PosX + ii] is Empty)) { boards.Add(Move(b, PosY + i, PosX - ii)); break; }
-                    //If it's empty just add it
-                    boards.Add(Move(b, PosY + i, PosX + ii));
+                    for (int ii = PosY; PosY < Math.Abs(bounds[bound][0, 1]); ii += bounds[bound][1, 1])
+                    {
+                        //Don't try to move to the same spot
+                        if (i == PosX && ii == PosY) { continue; }
+                        //Can move onto an empty space
+                        if (b.Pieces[PosX + i, PosY + ii] is Empty) 
+                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii })); }
+                        //Can't move onto one's own piece, or anywhere thereafter
+                        if (b.Pieces[PosX + i, PosY + ii].Player.IsW == Player.IsW) { break; }
+                        //Can move onto an enemy piece, but not thereafter
+                        if (b.Pieces[PosX + i, PosY + ii].Player.IsW != Player.IsW)
+                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii })); break; }
+                    }
                 }
             }
             return boards;
