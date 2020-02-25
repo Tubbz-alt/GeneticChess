@@ -100,6 +100,25 @@ namespace GeneticChess
             if (p is Knight) { return "N"; }
             throw new Exception("Invalid piece input");
         }
+        public Board Swap(int[] start, int[] end)
+        {
+            //Input verification
+            if (Pieces[start[0], start[1]] is Empty) { throw new Exception("Can't swap nothing"); }
+            if (!(Pieces[end[0], end[1]] is Empty) && Pieces[start[0], start[1]].Player.IsW == Pieces[end[0], end[1]].Player.IsW)
+            { throw new Exception("Can't swap on an own piece"); }
+            //Movement
+            Board board = Serializer.DeepClone(this);
+            board.Pieces[end[0], end[1]] = board.Pieces[start[0], start[1]];
+            board.Pieces[end[0], end[1]].PosX = end[0]; board.Pieces[end[0], end[1]].PosY = end[1];
+            board.Pieces[start[0], start[1]] = new Empty(start[0], start[1]);
+            //Set on first move stuff to false (and enpass to true) for applicable pieces
+            if (board.Pieces[end[0], end[1]] is Pawn) { (board.Pieces[end[0], end[1]] as Pawn).twoStep = false; }
+            if (board.Pieces[end[0], end[1]] is Pawn && start[0] + (board.Pieces[end[0], end[1]] as Pawn).LegalX == end[0])
+            { (board.Pieces[end[0], end[1]] as Pawn).enPass = true; }
+            if (board.Pieces[end[0], end[1]] is King) { (board.Pieces[end[0], end[1]] as King).CanCastle = false; }
+            if (board.Pieces[end[0], end[1]] is Rook) { (board.Pieces[end[0], end[1]] as Rook).CanCastle = false; }
+            return board;
+        }
         public List<Board> GenerateBoards(bool isW)
         {
             List<Board> Moves = new List<Board>();
