@@ -257,8 +257,16 @@ namespace GeneticChess
             foreach (Piece p in Pieces)
             {
                 if (p is Empty || p.Player.IsW != wturn) { continue; }
-
+                //Does nothing (abstract method)
                 var v = p.GenerateMoves(this);
+
+                if (p is Pawn) { v = (p as Pawn).GenerateMoves(this); }
+                if (p is King) { v = (p as King).GenerateMoves(this); }
+                if (p is Knight) { v = (p as Knight).GenerateMoves(this); }
+                if (p is Rook) { v = (p as Rook).GenerateMoves(this); }
+                if (p is Queen) { v = (p as Queen).GenerateMoves(this); }
+                if (p is Bishop) { v = (p as Bishop).GenerateMoves(this); }
+                
 
                 foreach (Board b in v)
                 {
