@@ -63,6 +63,7 @@ namespace GeneticChess
             double maxscore = double.MinValue;
             Board bestBoard = null;
             List<Board> possibilities = board.GenMoves(wTurn);
+            List<Board> possibilities2 = board.GenerateBoards(wTurn);
             if (possibilities.Count == 0) { /*forfeit*/ }
             foreach (Board b in possibilities)
             {
