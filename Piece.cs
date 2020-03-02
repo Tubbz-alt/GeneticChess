@@ -79,7 +79,7 @@ namespace GeneticChess
                         if (i == 2) { continue; }
                         //If an empty square check if can enpassed
                         if (b.Pieces[PosX + i, PosY + ii] is Empty) {
-                            if (b.Pieces[PosX + i, PosY] is Pawn && ((Pawn)b.Pieces[PosY, PosX + i]).enPass)
+                            if (b.Pieces[PosX + i, PosY] is Pawn && ((Pawn)b.Pieces[PosX + i, PosY]).enPass)
                             { goto addmove; }
                             continue;
                         }
@@ -181,23 +181,29 @@ namespace GeneticChess
         public override List<Board> GenerateMoves(Board b)
         {
             var boards = new List<Board>();
-            for (int i = 0; i <= 7 - PosY; i++)
+            //Declare bounds
+            var bounds = new int[,] { { 0 - PosX, PosY }, { 7 - PosX, PosY }, { PosX, 0 - PosY }, { PosX, 7 - PosY } };
+            for (int i = 0; i < 4; i++)
             {
-                for (int ii = 0; ii <= 7 - PosX; ii++)
+                for (int x = 0; x < bounds[i, 0]; x++)
                 {
-                    if (i == 0 && ii == 0) { continue; }
-                    //If it reaches a piece, that is the furthest it can move
-                    if (!(b.Pieces[PosX + ii, PosY + i] is Empty))
+                    for (int y = 0; y < bounds[i, 1]; y++)
                     {
-                        //If an enemy piece can move there but not further
-                        if (b.Pieces[PosX + ii, PosY + i].Player.IsW != Player.IsW)
-                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + ii, PosY + i })); }
-                        //If an ally piece can't move there, nor further
-                        break;
+                        //If it reaches a piece, it is the furthest in that direction it can move
+                        if (!(b.Pieces[PosX + x, PosY + y] is Empty))
+                        {
+                            //If an enemy piece can move there but not further
+                            if (b.Pieces[PosX + x, PosY + y].Player.IsW != Player.IsW)
+                            { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + x, PosY + y })); }
+                            //If an ally piece can't move there, nor further
+                            goto next;
+                        }
+                        //If it's still empty then just add it
+                        boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + x, PosY + y }));
                     }
-                    //If it's still empty then just add it
-                    boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + ii, PosY + i })); 
                 }
+                //Break both interior loops (w/ goto)
+            next:;
             }
             return boards;
         }
@@ -259,19 +265,18 @@ namespace GeneticChess
         public override List<Board> GenerateMoves(Board b)
         {
             var boards = new List<Board>();
-            for (int i = -2; i <= 2; i += 2)
+            //Declare all possible knight moves
+            var pairs = new int[8, 2] {
+                { 2, 1 }, { 2, -1 }, { -2, 1 }, { -2, -1  }, { 1, -2 }, { 1, 2 }, { -1, 2 }, { -1, -2  }
+            };
+            for (int i = 0; i < 7; i++)
             {
-                for (int ii = -2; ii <= 2; ii += 2)
-                {
-                    //If the knight is moving off the board it's invalid
-                    if (PosY + i > 7 || PosX + ii > 7  || PosY + i < 0 || PosX + ii < 0) { continue; }
-                    //If not moving in an L shape it's invalid
-                    if (Math.Abs(PosX - (PosX + ii)) + Math.Abs(PosY - (PosY + i)) == 3) { continue; }
+                //If the knight is moving off the board it's invalid
+                if (PosY + pairs[i, 1] > 7 || PosX + pairs[i, 0] > 7 || PosY + pairs[i, 1] < 0 || PosX + pairs[i, 0] < 0) { continue; }
 
-                    //If capturing an enemy or moving to an empty square, it's valid
-                    if (b.Pieces[PosX + ii, PosY + i] is Empty || b.Pieces[PosX + ii, PosY + i].Player.IsW != Player.IsW)
-                    { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + ii, PosY + i })); }
-                }
+                //If capturing an enemy or moving to an empty square, it's valid
+                if (b.Pieces[PosX + pairs[i, 0], PosY + pairs[i, 1]] is Empty || b.Pieces[PosX + pairs[i, 0], PosY + pairs[i, 1]].Player.IsW != Player.IsW)
+                { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + pairs[i, 0], PosY + pairs[i, 1] })); }
             }
             return boards;
         }
@@ -330,15 +335,15 @@ namespace GeneticChess
             for (int bound = 0; bound < 3; bound++)
             {
                 //Determine a max walkout distance and path to it
-                for (int i = PosX; i < Math.Abs(bounds[bound][0, 0]); i += bounds[bound][1, 0])
+                for (int i = PosX; Math.Abs(i) < bounds[bound][0, 0]; i += bounds[bound][1, 0])
                 {
-                    for (int ii = PosY; PosY < Math.Abs(bounds[bound][0, 1]); ii += bounds[bound][1, 1])
+                    for (int ii = PosY; Math.Abs(ii) < bounds[bound][0, 1]; ii += bounds[bound][1, 1])
                     {
                         //Don't try to move to the same spot
                         if (i == PosX && ii == PosY) { continue; }
                         //Can move onto an empty space
                         if (b.Pieces[PosX + i, PosY + ii] is Empty) 
-                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii })); }
+                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii })); continue; }
                         //Can't move onto one's own piece, or anywhere thereafter
                         if (b.Pieces[PosX + i, PosY + ii].Player.IsW == Player.IsW) { break; }
                         //Can move onto an enemy piece, but not thereafter
@@ -415,23 +420,28 @@ namespace GeneticChess
             //I can't cast queen to another piece type, so I'm just copy-pasting the move-gen code from bishops and rooks
 
             //Rook
-            for (int i = 0; i <= 7 - PosY; i++)
+            var boundsr = new int[,] { { 0 - PosX, PosY }, { 7 - PosX, PosY }, { PosX, 0 - PosY }, { PosX, 7 - PosY } };
+            for (int i = 0; i < 4; i++)
             {
-                for (int ii = 0; ii <= 7 - PosX; ii++)
+                for (int x = 0; x < boundsr[i, 0]; x++)
                 {
-                    if (i == 0 && ii == 0) { continue; }
-                    //If it reaches a piece, that is the furthest it can move
-                    if (!(b.Pieces[PosX + ii, PosY + i] is Empty))
+                    for (int y = 0; y < boundsr[i, 1]; y++)
                     {
-                        //If an enemy piece can move there but not further
-                        if (b.Pieces[PosX + ii, PosY + i].Player.IsW != Player.IsW)
-                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + ii, PosY + i })); }
-                        //If an ally piece can't move there, nor further
-                        break;
+                        //If it reaches a piece, it is the furthest in that direction it can move
+                        if (!(b.Pieces[PosX + x, PosY + y] is Empty))
+                        {
+                            //If an enemy piece can move there but not further
+                            if (b.Pieces[PosX + x, PosY + y].Player.IsW != Player.IsW)
+                            { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + x, PosY + y })); }
+                            //If an ally piece can't move there, nor further
+                            goto next;
+                        }
+                        //If it's still empty then just add it
+                        boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + x, PosY + y }));
                     }
-                    //If it's still empty then just add it
-                    boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + ii, PosY + i }));
                 }
+            //Break both interior loops (w/ goto)
+            next:;
             }
 
             //Bishop
@@ -450,15 +460,15 @@ namespace GeneticChess
             for (int bound = 0; bound < 3; bound++)
             {
                 //Determine a max walkout distance and path to it
-                for (int i = PosX; i < Math.Abs(bounds[bound][0, 0]); i += bounds[bound][1, 0])
+                for (int i = PosX; Math.Abs(i) < bounds[bound][0, 0]; i += bounds[bound][1, 0])
                 {
-                    for (int ii = PosY; PosY < Math.Abs(bounds[bound][0, 1]); ii += bounds[bound][1, 1])
+                    for (int ii = PosY; Math.Abs(ii) < bounds[bound][0, 1]; ii += bounds[bound][1, 1])
                     {
                         //Don't try to move to the same spot
                         if (i == PosX && ii == PosY) { continue; }
                         //Can move onto an empty space
                         if (b.Pieces[PosX + i, PosY + ii] is Empty)
-                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii })); }
+                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii })); continue; }
                         //Can't move onto one's own piece, or anywhere thereafter
                         if (b.Pieces[PosX + i, PosY + ii].Player.IsW == Player.IsW) { break; }
                         //Can move onto an enemy piece, but not thereafter
