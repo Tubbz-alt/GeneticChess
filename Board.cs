@@ -117,6 +117,7 @@ namespace GeneticChess
             { (board.Pieces[end[0], end[1]] as Pawn).enPass = true; }
             if (board.Pieces[end[0], end[1]] is King) { (board.Pieces[end[0], end[1]] as King).CanCastle = false; }
             if (board.Pieces[end[0], end[1]] is Rook) { (board.Pieces[end[0], end[1]] as Rook).CanCastle = false; }
+            board.WTurn = !board.WTurn;
             return board;
         }
         public List<Board> GenerateBoards(bool isW)
