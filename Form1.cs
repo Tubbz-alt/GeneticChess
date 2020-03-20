@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -85,7 +85,7 @@ namespace GeneticChess
 
                     if (board.Checks(ActiveBoard.WTurn)) { board = null; MessageBox.Show("Can't leave king in check"); }
                 }
-                catch(Exception ex) { MessageBox.Show("Invalid move: " + ex.ToString()); return; }
+                catch (Exception ex) { MessageBox.Show("Invalid move: " + ex.ToString()); return; }
                 ActiveBoard = board;
                 PanelUpdate();
                 MessageBox.Show(board.Moves);

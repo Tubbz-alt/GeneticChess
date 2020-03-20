@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -65,20 +65,22 @@ namespace GeneticChess
         {
             var boards = new List<Board>();
             int scale = Player.IsW ? -1 : 1;
-            for (int i = 1 * scale; Math.Abs(i) <= 2; i += scale)
+            for (int i = scale; Math.Abs(i) <= 2; i += scale)
             {
-                for (int ii = -1 * scale; ii != 2 * scale; ii += scale)
+                for (int ii = -scale; ii != 2 * scale; ii += scale)
                 {
                     //Ignore moves outside the board
                     if (PosX + i > 7 || PosY + ii > 7 || PosX + i < 0 || PosY + ii < 0) { continue; }
                     //Ignore destinations with own pieces
                     if (!(b.Pieces[PosX + i, PosY + ii] is Empty) && b.Pieces[PosX + i, PosY + ii].Player.IsW == Player.IsW) { continue; }
                     //If moving sideways
-                    if (ii != 0) {
+                    if (ii != 0)
+                    {
                         //Can't move forward and sideways two steps
-                        if (i == 2) { continue; }
+                        if (Math.Abs(i) == 2) { continue; }
                         //If an empty square check if can enpassed
-                        if (b.Pieces[PosX + i, PosY + ii] is Empty) {
+                        if (b.Pieces[PosX + i, PosY + ii] is Empty)
+                        {
                             if (b.Pieces[PosX + i, PosY] is Pawn && ((Pawn)b.Pieces[PosX + i, PosY]).enPass)
                             { goto addmove; }
                             continue;
@@ -87,7 +89,8 @@ namespace GeneticChess
                         if (b.Pieces[PosX + i, PosY + ii].Player.IsW != Player.IsW) { goto addmove; }
                     }
                     //If it's moving forward one step
-                    if (i == scale) {
+                    if (i == scale)
+                    {
                         //If there is nothing in front, it's legal
                         if (b.Pieces[PosX + i, PosY + ii] is Empty) { goto addmove; }
                     }
@@ -98,8 +101,8 @@ namespace GeneticChess
 
                     //Keep it from going to addmove without proper authorization
                     continue;
-                    addmove:
-                    boards.Add(b.Swap( new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii }));
+                addmove:
+                    boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii }));
                 }
             }
             return boards;
@@ -192,7 +195,7 @@ namespace GeneticChess
             //Down [3]
             bounds.Add(new int[,] { { 7 - PosX, 1 }, { 1, 1 } });
 
-            for (int bound = 0; bound < 3; bound++)
+            for (int bound = 0; bound < 4; bound++)
             {
                 for (int x = 0; Math.Abs(x) < bounds[bound][0, 0]; x += bounds[bound][1, 0])
                 {
@@ -211,7 +214,7 @@ namespace GeneticChess
                         boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + x, PosY + y }));
                     }
                 }
-                //Break both interior loops (w/ goto)
+            //Break both interior loops (w/ goto)
             next:;
             }
             return boards;
@@ -330,37 +333,32 @@ namespace GeneticChess
         public override List<Board> GenerateMoves(Board b)
         {
             var boards = new List<Board>();
-            var bounds = new List<int[,]>();
+            //Format is [0] distance [1] xiterator [2] yiterator
+            var bounds = new List<int[]>();
             //Up and to the right [0]
-            bounds.Add(new int[,] { { PosX, 7 - PosY }, { -1, 1 } });
+            bounds.Add(new int[] { PosX < 7 - PosY ? PosX : 7 - PosY, -1, 1 });
             //Up and to the left [1]
-            bounds.Add(new int[,] {{ PosX, PosY }, { -1, -1 } });
+            bounds.Add(new int[] { PosX < PosY ? PosX : PosY,  -1, -1 });
             //Down and to the right [2]
-            bounds.Add(new int[,] {{ 7 - PosX, 7 - PosY }, { 1, 1 } });
+            bounds.Add(new int[] { 7 - PosX < 7 - PosY ? 7 - PosX : 7 - PosY,  1, 1  });
             //Down and to the left [3]
-            bounds.Add(new int[,] {{ 7 - PosX, PosY }, { 1, -1 } });
+            bounds.Add(new int[] { 7 - PosX < PosY ? 7 - PosX : PosY, 1, -1 });
 
             //Foreach bound
-            for (int bound = 0; bound < 3; bound++)
+            for (int bound = 0; bound < 4; bound++)
             {
                 //Determine a max walkout distance and path to it
-                for (int i = 0; Math.Abs(i) < bounds[bound][0, 0]; i += bounds[bound][1, 0])
+                for (int i = 1; i < bounds[bound][0]; i ++)
                 {
-                    for (int ii = 0; Math.Abs(ii) < bounds[bound][0, 1]; ii += bounds[bound][1, 1])
-                    {
-                        //Don't try to move to the same spot
-                        if (i == 0 && ii == 0) { continue; }
-                        //Can move onto an empty space
-                        if (b.Pieces[PosX + i, PosY + ii] is Empty) 
-                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii })); continue; }
-                        //Can't move onto one's own piece, or anywhere thereafter
-                        if (b.Pieces[PosX + i, PosY + ii].Player.IsW == Player.IsW) { goto next; }
-                        //Can move onto an enemy piece, but not thereafter
-                        if (b.Pieces[PosX + i, PosY + ii].Player.IsW != Player.IsW)
-                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii })); goto next; }
-                    }
+                    //Can move onto an empty space
+                    if (b.Pieces[PosX + (i * bounds[bound][1]), PosY + (i * bounds[bound][2])] is Empty)
+                    { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + (i * bounds[bound][1]), PosY + (i * bounds[bound][2]) })); continue; }
+                    //Can't move onto one's own piece, or anywhere thereafter
+                    if (b.Pieces[PosX + (i * bounds[bound][1]), PosY + (i * bounds[bound][2])].Player.IsW == Player.IsW) { break; }
+                    //Can move onto an enemy piece, but not thereafter
+                    if (b.Pieces[PosX + (i * bounds[bound][1]), PosY + (i * bounds[bound][2])].Player.IsW != Player.IsW)
+                    { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + (i * bounds[bound][1]), PosY + (i * bounds[bound][2]) })); break; }
                 }
-            next:;
             }
             return boards;
         }
@@ -442,7 +440,7 @@ namespace GeneticChess
             //Down [3]
             bounds.Add(new int[,] { { 7 - PosX, 1 }, { 1, 1 } });
 
-            for (int bound = 0; bound < 3; bound++)
+            for (int bound = 0; bound < 4; bound++)
             {
                 for (int x = 0; Math.Abs(x) < bounds[bound][0, 0]; x += bounds[bound][1, 0])
                 {
@@ -467,38 +465,34 @@ namespace GeneticChess
 
             //Bishop
 
-            bounds = new List<int[,]>();
+            //Format is [0] distance [1] xiterator [2] yiterator
+            var bbounds = new List<int[]>();
             //Up and to the right [0]
-            bounds.Add(new int[,] { { PosX, 7 - PosY }, { -1, 1 } });
+            bbounds.Add(new int[] { PosX < 7 - PosY ? PosX : 7 - PosY, -1, 1 });
             //Up and to the left [1]
-            bounds.Add(new int[,] { { PosX, PosY }, { -1, -1 } });
+            bbounds.Add(new int[] { PosX < PosY ? PosX : PosY, -1, -1 });
             //Down and to the right [2]
-            bounds.Add(new int[,] { { 7 - PosX, 7 - PosY }, { 1, 1 } });
+            bbounds.Add(new int[] { 7 - PosX < 7 - PosY ? 7 - PosX : 7 - PosY, 1, 1 });
             //Down and to the left [3]
-            bounds.Add(new int[,] { { 7 - PosX, PosY }, { 1, -1 } });
+            bbounds.Add(new int[] { 7 - PosX < PosY ? 7 - PosX : PosY, 1, -1 });
 
             //Foreach bound
-            for (int bound = 0; bound < 3; bound++)
+            for (int bound = 0; bound < 4; bound++)
             {
                 //Determine a max walkout distance and path to it
-                for (int i = 0; Math.Abs(i) < bounds[bound][0, 0]; i += bounds[bound][1, 0])
+                for (int i = 1; i < bbounds[bound][0]; i++)
                 {
-                    for (int ii = 0; Math.Abs(ii) < bounds[bound][0, 1]; ii += bounds[bound][1, 1])
-                    {
-                        //Don't try to move to the same spot
-                        if (i == 0 && ii == 0) { continue; }
-                        //Can move onto an empty space
-                        if (b.Pieces[PosX + i, PosY + ii] is Empty)
-                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii })); continue; }
-                        //Can't move onto one's own piece, or anywhere thereafter
-                        if (b.Pieces[PosX + i, PosY + ii].Player.IsW == Player.IsW) { goto next; }
-                        //Can move onto an enemy piece, but not thereafter
-                        if (b.Pieces[PosX + i, PosY + ii].Player.IsW != Player.IsW)
-                        { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii })); goto next; }
-                    }
+                    //Can move onto an empty space
+                    if (b.Pieces[PosX + (i * bbounds[bound][1]), PosY + (i * bbounds[bound][2])] is Empty)
+                    { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + (i * bbounds[bound][1]), PosY + (i * bbounds[bound][2]) })); continue; }
+                    //Can't move onto one's own piece, or anywhere thereafter
+                    if (b.Pieces[PosX + (i * bbounds[bound][1]), PosY + (i * bbounds[bound][2])].Player.IsW == Player.IsW) { break; }
+                    //Can move onto an enemy piece, but not thereafter
+                    if (b.Pieces[PosX + (i * bbounds[bound][1]), PosY + (i * bbounds[bound][2])].Player.IsW != Player.IsW)
+                    { boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + (i * bbounds[bound][1]), PosY + (i * bbounds[bound][2]) })); break; }
                 }
-            next:;
             }
+
             return boards;
         }
         public override Board Move(Board b, int toX, int toY)
@@ -634,7 +628,7 @@ namespace GeneticChess
                                 Piece p = b.Pieces[PosX + x, PosY + y];
                                 //If queen/rook/king within range
                                 if (p is Rook || p is Queen || (p is King && (Math.Abs(x) == 1 || Math.Abs(y) == 1)))
-                                    //Then you're in check
+                                //Then you're in check
                                 { return true; }
                             }
                             //If an ally piece not in check
@@ -675,7 +669,7 @@ namespace GeneticChess
                         {
                             var p = b.Pieces[PosX + i, PosY + ii];
                             if (p is Bishop || p is Queen || (p is King && (Math.Abs(i) == 1 || Math.Abs(ii) == 1)))
-                                //You're in check
+                            //You're in check
                             { return true; }
                         }
                     }

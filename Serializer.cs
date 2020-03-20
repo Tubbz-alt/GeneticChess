@@ -1,8 +1,8 @@
-using System.IO;
+﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace GeneticChess
-{ 
+{
     public class Serializer
     {
         public static T DeepClone<T>(T obj)
