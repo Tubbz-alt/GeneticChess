@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GeneticChess
@@ -112,8 +112,9 @@ namespace GeneticChess
             board.Pieces[end[0], end[1]].PosX = end[0]; board.Pieces[end[0], end[1]].PosY = end[1];
             board.Pieces[start[0], start[1]] = new Empty(start[0], start[1]);
             //Set on first move stuff to false (and enpass to true) for applicable pieces
-            if (board.Pieces[end[0], end[1]] is Pawn) { (board.Pieces[end[0], end[1]] as Pawn).twoStep = false; }
-            if (board.Pieces[end[0], end[1]] is Pawn && start[0] + (board.Pieces[end[0], end[1]] as Pawn).LegalX == end[0])
+            if (board.Pieces[end[0], end[1]] is Pawn)
+            { (board.Pieces[end[0], end[1]] as Pawn).twoStep = false; (board.Pieces[end[0], end[1]] as Pawn).twoStep = false; }
+            if (board.Pieces[end[0], end[1]] is Pawn && Math.Abs(end[0] - start[0]) == 2)
             { (board.Pieces[end[0], end[1]] as Pawn).enPass = true; }
             if (board.Pieces[end[0], end[1]] is King) { (board.Pieces[end[0], end[1]] as King).CanCastle = false; }
             if (board.Pieces[end[0], end[1]] is Rook) { (board.Pieces[end[0], end[1]] as Rook).CanCastle = false; }
@@ -166,7 +167,7 @@ namespace GeneticChess
                             try { trialBoard = ((Rook)trialBoard.Pieces[j, jj]).Move(trialBoard, j + df, jj); }
                             catch { continue; }
                             if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-                            
+
                             trialBoard = Serializer.DeepClone(this);
                             try { trialBoard = ((Rook)trialBoard.Pieces[j, jj]).Move(trialBoard, j, jj + df); }
                             catch { continue; }
@@ -196,7 +197,7 @@ namespace GeneticChess
                             try { trialBoard = ((Bishop)trialBoard.Pieces[j, jj]).Move(trialBoard, j + df, jj + df); }
                             catch { continue; }
                             if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-                            
+
                             trialBoard = Serializer.DeepClone(this);
                             try { trialBoard = ((Bishop)trialBoard.Pieces[j, jj]).Move(trialBoard, j - df, jj + df); }
                             catch { continue; ; }
@@ -213,7 +214,7 @@ namespace GeneticChess
                             try { trialBoard = ((Queen)trialBoard.Pieces[j, jj]).Move(trialBoard, j + df, jj); }
                             catch { continue; }
                             if (!trialBoard.amICheck(isW) && trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-                            
+
                             trialBoard = Serializer.DeepClone(this);
                             try { trialBoard = ((Queen)trialBoard.Pieces[j, jj]).Move(trialBoard, j, jj + df); }
                             catch { continue; }
@@ -226,7 +227,7 @@ namespace GeneticChess
                             try { trialBoard = ((Queen)trialBoard.Pieces[j, jj]).Move(trialBoard, j + df, jj + df); }
                             catch { continue; }
                             if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-                            
+
                             trialBoard = Serializer.DeepClone(this);
                             try { trialBoard = ((Queen)trialBoard.Pieces[j, jj]).Move(trialBoard, j - df, jj + df); }
                             catch { continue; }
@@ -267,7 +268,7 @@ namespace GeneticChess
                 if (p is Rook) { v = (p as Rook).GenerateMoves(this); }
                 if (p is Queen) { v = (p as Queen).GenerateMoves(this); }
                 if (p is Bishop) { v = (p as Bishop).GenerateMoves(this); }
-                
+
 
                 foreach (Board b in v)
                 {
