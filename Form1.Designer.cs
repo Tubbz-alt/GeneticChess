@@ -1,4 +1,4 @@
-namespace GeneticChess
+﻿namespace GeneticChess
 {
     partial class Form1
     {
@@ -44,4 +44,3 @@ namespace GeneticChess
         #endregion
     }
 }
-
