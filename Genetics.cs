@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,13 +24,13 @@ namespace GeneticChess
 
         public Genetics(bool Load)
         {
+            //Initialize population
             NN[] NNs = new NN[PopSize];
-            for (int i = 0; i < PopSize; i++) { /*Initialize or load them*/ }
+            if (!Load) { foreach (NN nn in NNs) { nn.Init(); } }
+            else { /*Load data from file*/ }
         }
-        public void Evolve()
+        public void Evolve(bool Load)
         {
-            //Initialize first
-
             //Compute fitness
             NNs = Tournament();
 
@@ -40,8 +40,7 @@ namespace GeneticChess
         //Quicksort!
         public NN[] Tournament()
         {
-            Random r = new Random();
-            //Assign a random color for the NN and have them sort
+            //Sort NNs
             NNs = Quicksort.Quick(NNs, 0, NNs.Length);
             return NNs;
         }
