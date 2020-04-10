@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GeneticChess
@@ -15,7 +15,6 @@ namespace GeneticChess
         public bool WCheck = false;
         public bool BCheck = false;
         public int MoveNumber = 0;
-        public string Moves = "";
         public Board(Player p1, Player p2, Piece[,] pieces, bool wturn)
         {
             P1 = p1; P2 = p2; Pieces = pieces; WTurn = wturn;
@@ -111,156 +110,30 @@ namespace GeneticChess
             board.Pieces[end[0], end[1]] = board.Pieces[start[0], start[1]];
             board.Pieces[end[0], end[1]].PosX = end[0]; board.Pieces[end[0], end[1]].PosY = end[1];
             board.Pieces[start[0], start[1]] = new Empty(start[0], start[1]);
+            var p = board.Pieces[end[0], end[1]];
             //Set on first move stuff to false (and enpass to true) for applicable pieces
-            if (board.Pieces[end[0], end[1]] is Pawn)
-            { (board.Pieces[end[0], end[1]] as Pawn).twoStep = false; (board.Pieces[end[0], end[1]] as Pawn).twoStep = false; }
-            if (board.Pieces[end[0], end[1]] is Pawn && Math.Abs(end[0] - start[0]) == 2)
-            { (board.Pieces[end[0], end[1]] as Pawn).enPass = true; }
-            if (board.Pieces[end[0], end[1]] is King) { (board.Pieces[end[0], end[1]] as King).CanCastle = false; }
-            if (board.Pieces[end[0], end[1]] is Rook) { (board.Pieces[end[0], end[1]] as Rook).CanCastle = false; }
+            if (p is Pawn)
+            { (p as Pawn).twoStep = false; }
+            if (p is Pawn && Math.Abs(end[0] - start[0]) == 2) { (p as Pawn).enPass = true; }
+            if (p is King) { (board.Pieces[end[0], end[1]] as King).CanCastle = false; }
+            if (p is Rook) { (board.Pieces[end[0], end[1]] as Rook).CanCastle = false; }
             board.WTurn = !board.WTurn;
             return board;
-        }
-        public List<Board> GenerateBoards(bool isW)
-        {
-            List<Board> Moves = new List<Board>();
-            if (WTurn != isW)
-            { Console.WriteLine("Not my turn"); return Moves; }
-            //Foreach square on the board
-            for (int j = 0; j <= 7; j++)
-            {
-                for (int jj = 0; jj <= 7; jj++)
-                {
-                    //Piece selected
-                    Piece piece = Pieces[j, jj];
-                    //If the piece is empty, it can't be moved
-                    if (piece is Empty) { continue; }
-                    //If the piece is not yours to move, it can't be moved
-                    if (piece.Player.IsW != isW) { continue; }
-                    //Which side of the board you are on
-                    int iFactor;
-                    if (isW) { iFactor = -1; }
-                    else { iFactor = 1; }
-
-                    if (piece is Pawn)
-                    {
-                        //Because it is my turn anyway, I can set my remaining pawns' enpass to false (so long as they don't do it this turn)
-                        ((Pawn)piece).enPass = false;
-                        //x
-                        for (int i = 1 * iFactor; Math.Abs(i) <= Math.Abs(2 * iFactor); i = i + iFactor)
-                        {   //y
-                            for (int ii = -1; ii <= 1; ii++)
-                            {
-                                Board trialBoard = Serializer.DeepClone(this);
-                                try { trialBoard = ((Pawn)trialBoard.Pieces[j, jj]).Move(trialBoard, j + i, jj + ii); }
-                                catch { continue; ; }
-                                if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-                            }
-                        }
-                        continue;
-                    }
-                    if (piece is Rook)
-                    {
-                        for (int df = -7; df <= 7; df++)
-                        {
-                            Board trialBoard = Serializer.DeepClone(this);
-                            try { trialBoard = ((Rook)trialBoard.Pieces[j, jj]).Move(trialBoard, j + df, jj); }
-                            catch { continue; }
-                            if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-
-                            trialBoard = Serializer.DeepClone(this);
-                            try { trialBoard = ((Rook)trialBoard.Pieces[j, jj]).Move(trialBoard, j, jj + df); }
-                            catch { continue; }
-                            if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-                        }
-                        continue;
-                    }
-                    if (piece is Knight)
-                    {
-                        for (int dfx = -1 * iFactor; Math.Abs(dfx) <= Math.Abs(2 * iFactor); dfx = dfx + iFactor)
-                        {
-                            for (int dfy = -1 * iFactor; Math.Abs(dfy) <= Math.Abs(2 * iFactor); dfy = Math.Abs(dfy) + 1)
-                            {
-                                Board trialBoard = Serializer.DeepClone(this);
-                                try { trialBoard = ((Knight)trialBoard.Pieces[j, jj]).Move(trialBoard, j + dfx, jj + dfy); }
-                                catch { continue; }
-                                if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-                            }
-                        }
-                        continue;
-                    }
-                    if (piece is Bishop)
-                    {
-                        for (int df = -7; df <= 7; df++)
-                        {
-                            Board trialBoard = Serializer.DeepClone(this);
-                            try { trialBoard = ((Bishop)trialBoard.Pieces[j, jj]).Move(trialBoard, j + df, jj + df); }
-                            catch { continue; }
-                            if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-
-                            trialBoard = Serializer.DeepClone(this);
-                            try { trialBoard = ((Bishop)trialBoard.Pieces[j, jj]).Move(trialBoard, j - df, jj + df); }
-                            catch { continue; ; }
-                            if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-                        }
-                        continue;
-                    }
-                    if (piece is Queen)
-                    {
-                        //fixed?
-                        for (int df = -7; df <= 7; df++)
-                        {
-                            Board trialBoard = Serializer.DeepClone(this);
-                            try { trialBoard = ((Queen)trialBoard.Pieces[j, jj]).Move(trialBoard, j + df, jj); }
-                            catch { continue; }
-                            if (!trialBoard.amICheck(isW) && trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-
-                            trialBoard = Serializer.DeepClone(this);
-                            try { trialBoard = ((Queen)trialBoard.Pieces[j, jj]).Move(trialBoard, j, jj + df); }
-                            catch { continue; }
-                            if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-                        }
-                        //Bishop
-                        for (int df = -7; df <= 7; df++)
-                        {
-                            Board trialBoard = Serializer.DeepClone(this);
-                            try { trialBoard = ((Queen)trialBoard.Pieces[j, jj]).Move(trialBoard, j + df, jj + df); }
-                            catch { continue; }
-                            if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-
-                            trialBoard = Serializer.DeepClone(this);
-                            try { trialBoard = ((Queen)trialBoard.Pieces[j, jj]).Move(trialBoard, j - df, jj + df); }
-                            catch { continue; }
-                            if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-                        }
-                        continue;
-                    }
-                    if (piece is King)
-                    {
-                        for (int dfx = -1; dfx <= 1; dfx++)
-                        {
-                            for (int dfy = -3; dfy <= 3; dfy++)
-                            {
-                                Board trialBoard = Serializer.DeepClone(this);
-                                try { trialBoard = ((King)trialBoard.Pieces[j, jj]).Move(trialBoard, j + dfx, jj + dfy); }
-                                catch { continue; }
-                                if (trialBoard.Pieces != Pieces) { Moves.Add(trialBoard); }
-                            }
-                        }
-                        continue;
-                    }
-                }
-            }
-            return Moves;
         }
         public List<Board> GenMoves(bool wturn)
         {
             var boards = new List<Board>();
+            //Reset enpass availiblity on each turn's passing
             foreach (Piece p in Pieces)
             {
                 if (p is Empty || p.Player.IsW != wturn) { continue; }
-                //Does nothing (abstract method)
-                var v = p.GenerateMoves(this);
+                if (p is Pawn) { (p as Pawn).enPass = false; }
+            }
+            foreach (Piece p in Pieces)
+            {
+                if (p is Empty || p.Player.IsW != wturn) { continue; }
+                //Generates an empty list
+                var v = new List<Board>();
 
                 if (p is Pawn) { v = (p as Pawn).GenerateMoves(this); }
                 if (p is King) { v = (p as King).GenerateMoves(this); }
@@ -272,7 +145,6 @@ namespace GeneticChess
 
                 foreach (Board b in v)
                 {
-                    //Need to check detect these before adding
                     boards.Add(b);
                 }
             }
