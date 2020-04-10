@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace GeneticChess
 {
     class NN
     {
         static int Resolution = 8;
-        public int NumLayers = 3;
+        public int NumLayers = 5;
         public int INCount = 16;
         public int NCount = 8;
         public int ONCount = 1;
@@ -66,21 +61,27 @@ namespace GeneticChess
             if (possibilities.Count == 0) { /*forfeit*/ }
             foreach (Board b in possibilities)
             {
+                //Ignore checked board states
+                if (b.Checks(player.IsW)) { continue; }
                 var score = Score(b);
                 if (score > maxscore) { score = maxscore; bestBoard = b; }
             }
+            //If no boards are found then they lose
+            if (bestBoard == null) { if (player.IsW) { bestBoard.BWin = true; } else { bestBoard.WWin = true; } }
             return bestBoard;
         }
         public double Score(Board board)
         {
             var input = new double[8, 8];
+            //Flip board to always have self at bottom for scoring purposes
+            if (!player.IsW) { board.Pieces = ArrayInverse(board.Pieces); }
             for (int i = 0; i < 8; i++)
             {
                 for (int ii = 0; ii < 8; ii++)
                 {
                     //Set piece values equal to standard chess piece values
                     Piece p = board.Pieces[i, ii];
-                    //Don't have to set empty piece = 0 b/c array initialization does it for me
+                    //Don't have to set empty piece = 0 b/c array initialization does it automatically
                     if (p is Empty) { continue; }
                     if (p is Pawn) { input[i, ii] = 1; }
                     if (p is Knight || p is Bishop) { input[i, ii] = 3; }
@@ -122,9 +123,7 @@ namespace GeneticChess
         }
         public double Run(double[,] image)
         {
-            double[,] input = new double[Resolution, Resolution];
-            //Deepclone?
-            for (int i = 0; i < Resolution; i++) { for (int ii = 0; ii < Resolution; ii++) { input[i, ii] = image[i, ii]; } }
+            double[,] input = Serializer.DeepClone(image);
 
             //Forward
             for (int i = 0; i < Layers.Count; i++)
@@ -133,6 +132,18 @@ namespace GeneticChess
                 Layers[i].Calculate(Layers[i - 1].Values, i == Layers.Count - 1);
             }
             return Layers[Layers.Count() - 1].Values[0];
+        }
+        private T[,] ArrayInverse<T>(T[,] matrix)
+        {
+            var matrixinverse = new T[matrix.GetLength(0), matrix.GetLength(1)];
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                for (int ii = 0; ii < matrix.GetLength(1); ii++)
+                {
+                    matrixinverse[i, ii] = matrix[ii, i];
+                }
+            }
+            return matrixinverse;
         }
     }
     class ActivationFunctions
@@ -206,7 +217,6 @@ namespace GeneticChess
             Weights = new double[Length, InputLength];
             Biases = new double[Length];
         }
-
         public void Calculate(double[] input, bool output)
         {
             Values = new double[Length];
