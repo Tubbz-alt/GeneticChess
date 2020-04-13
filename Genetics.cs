@@ -9,39 +9,48 @@ namespace GeneticChess
     class Genetics
     {
         public int PopSize { get; set; }
-        public int SurvivalProportion { get; set; }
-        public int SurvivalRateChange { get; set; }
-        public int MutationProportion { get; set; }
-        NN[] NNs
-        {
-            get { return NNs; }
-            set
-            {
-                if (value.Count() % 2 == 0) { NNs = value; }
-                else { throw new Exception("NNs's count must be divisible by 2"); }
-            }
-        }
+        public double SurvivalProportion { get; set; }
+        public double SurvivalRateChange { get; set; }
+        public double MutationProportion { get; set; }
+        NN[] NNs { get; set; }
 
-        public Genetics(bool Load)
+        /// <summary>
+        /// Initializes the genetics class
+        /// </summary>
+        /// <param name="Load">Whether or not to load weights and biases from file</param>
+        /// <param name="ps">Population size</param>
+        /// <param name="sp">Likelyhood of survival between generations (per individual)</param>
+        /// <param name="src">How much more likely the strong are to survive than the weak (exponentially)</param>
+        /// <param name="mp">How likely mutations are to occur (gene by gene)</param>
+        /// <param name="af">The currently active form (a lazy workaround to update the board)</param>
+        public Genetics(bool Load, int ps, double sp, double src, double mp, Form1 af)
         {
+            NN.ActiveForm = af;
+            PopSize = ps; SurvivalProportion = sp; SurvivalRateChange = src; MutationProportion = mp;
             //Initialize population
-            NN[] NNs = new NN[PopSize];
-            if (!Load) { foreach (NN nn in NNs) { nn.Init(); } }
-            else { /*Load data from file*/ }
+            NNs = new NN[PopSize];
+            if (!Load) { for (int i = 0; i < PopSize; i++) { NNs[i] = new NN(); NNs[i].Init(); } }
+            else { for (int i = 0; i < PopSize; i++) { NNs[i] = IO.Read(i); } }
         }
-        public void Evolve(bool Load)
+        public void Evolve()
         {
             //Compute fitness
             NNs = Tournament();
 
             //Selection, propegation, mutation
             NNs = Propegate();
+
+            //Save population
+            for (int i = 0; i < PopSize; i++)
+            {
+                IO.Write(NNs[i], i);
+            }
         }
         //Quicksort!
         public NN[] Tournament()
         {
             //Sort NNs
-            NNs = Quicksort.Quick(NNs, 0, NNs.Length);
+            NNs = Quicksort.Quick(NNs, 0, NNs.Length - 1);
             return NNs;
         }
         public NN[] Propegate()
@@ -50,7 +59,7 @@ namespace GeneticChess
             //NNs are stored fitest to least fit in this list
             //(opposite of the array)
             var OldNNs = new List<NN>();
-            int LikelyhoodOfSurvival = SurvivalProportion;
+            double LikelyhoodOfSurvival = SurvivalProportion;
             var r = new Random();
             for (int i = NNs.Count(); i > 0; i++)
             {
