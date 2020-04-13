@@ -19,11 +19,13 @@ namespace GeneticChess
 
         private Panel[,] BoardPanel = new Panel[8, 8];
         private Button[] Buttons = new Button[2];
-
-        Board ActiveBoard = new Board(new Player(true), new Player(false), new Piece[8, 8], true).initBoard();
+        Board activeboard;
+        public Board ActiveBoard { get { return activeboard; } set { activeboard = value; PanelUpdate(); } }
         private int tilesize;
+        private int[] formsize { get; set; }
         public Form1()
         {
+            ActiveBoard = new Board(new Player(true), new Player(false), new Piece[8, 8], true).initBoard();
             InitializeComponent();
             for (int i = 0; i < 8; i++)
             {
@@ -76,11 +78,13 @@ namespace GeneticChess
 
             //Set dynamic scaling
             this.ResizeEnd += Form1_Resize;
-            Width = 500; Height = 500;
+            Size = new Size(500, 500);
+            formsize = new int[] { 0, 0 };
             Form1_Resize(this, new EventArgs());
         }
         private void Form1_Resize(object sender, EventArgs e)
         {
+            if (Size.Width == formsize[0] && Size.Height == formsize[1]) { return; }
             Control control = (Control)sender;
             tilesize = control.Size.Width / 9;
             // Set form dimentions
@@ -107,6 +111,8 @@ namespace GeneticChess
                 Buttons[1].Location = new Point(tilesize * 4, tilesize * 8);
                 Buttons[1].Font = new Font("Tahoma", fontsize);
             }
+            formsize[0] = Serializer.DeepClone(Size.Width);
+            formsize[1] = Serializer.DeepClone(Size.Height);
         }
         private void Button_Click(object sender, EventArgs e)
         {
@@ -152,6 +158,9 @@ namespace GeneticChess
             new Thread(() =>
             {
                 var tempboard = Serializer.DeepClone(ActiveBoard);
+                var genetics = new Genetics(false, 5, .5, 1.2, .1, this);
+                genetics.Evolve();
+                /*
                 NN nn1 = new NN().Init(); NN nn2 = new NN().Init();
                 var p1 = new Player(true); var p2 = new Player(false);
                 nn1.player = p1; nn2.player = p2;
@@ -164,6 +173,7 @@ namespace GeneticChess
                     ActiveBoard = nn2.Move(tempboard, tempboard.WTurn);
                     Invoke((Action)delegate { ActiveBoard = Serializer.DeepClone(tempboard); PanelUpdate(); });
                 }
+                */
             });
             thread.IsBackground = true;
             thread.Start();
@@ -189,6 +199,7 @@ namespace GeneticChess
 
         void PanelUpdate()
         {
+            if (BoardPanel[0, 0] is null) { return; }
             for (int i = 0; i < 8; i++)
             {
                 for (int ii = 0; ii < 8; ii++)
