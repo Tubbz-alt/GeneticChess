@@ -63,6 +63,7 @@ namespace GeneticChess
             if (obj is Empty || this is Empty) { return false; }
             if ((obj as Piece).Player.IsW != Player.IsW) { return false; }
             if (obj is Pawn && this is Pawn) { return true; }
+            if (obj is Pawn && this is Queen) { return true; }
             if (obj is King && this is King) { return true; }
             if (obj is Knight && this is Knight) { return true; }
             if (obj is Rook && this is Rook) { return true; }
@@ -130,7 +131,7 @@ namespace GeneticChess
                     continue;
                 addmove:
                     //If the pawn is on the opposite side replace it with a queen
-                    if ((Player.IsW && PosX == 0) || (!Player.IsW && PosX == 7)) { b.Pieces[PosX, PosY] = new Queen(Player, PosX, PosY); }
+                   // if ((Player.IsW && PosX == 0) || (!Player.IsW && PosX == 7)) {  }
                     boards.Add(b.Swap(new int[] { PosX, PosY }, new int[] { PosX + i, PosY + ii }));
                 }
             }
@@ -196,7 +197,6 @@ namespace GeneticChess
     [Serializable]
     class Knight : Piece
     {
-        public new int LegalX = 2, LegalY = 2;
         public Knight(Player player, int posX, int posY)
         {
             Player = player; PosX = posX; PosY = posY; Name = "Knight";
@@ -391,7 +391,7 @@ namespace GeneticChess
                         }
                     }
                 }
-                if ((b.Pieces[PosX, 7] is Rook) && (b.Pieces[PosX, 0] as Rook).CanCastle)
+                if ((b.Pieces[PosX, 0] is Rook) && (b.Pieces[PosX, 0] as Rook).CanCastle)
                 {
                     for (int i = 1; i <= 3; i++)
                     {
