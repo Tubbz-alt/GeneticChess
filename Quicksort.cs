@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,9 +26,9 @@ namespace GeneticChess
                 //Randomly assign color
                 bool isW = r.Next(0, 2) == 1 ? true : false;
                 //While pivot wins to array[i]
-                do { i++; } while (pivot.Vs(array[i], isW));
+                do { i++; } while (i >= j && (pivot.SetColor(isW)).Vs(array[i].SetColor(!isW)));
                 //And loses to array[j]
-                do { j--; } while (!pivot.Vs(array[j], isW));
+                do { j--; } while (j >= i && !(pivot.SetColor(isW)).Vs(array[j].SetColor(!isW)));
                 if (i >= j) { return j; }
                 Swap(array, i, j);
             } while (true);
