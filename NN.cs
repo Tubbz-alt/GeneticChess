@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace GeneticChess
 {
@@ -23,15 +24,21 @@ namespace GeneticChess
         public double PercCorrect = 0;
         public double Error = 0;
         public Player player { get; set; }
+        public static Form1 ActiveForm {get; set;}
         public int Guess { get; set; }
 
+        public NN SetColor(bool color)
+        {
+            player = new Player(color);
+            return this;
+        }
         public NN(double momentspeed, double learningrate, int numlayers, int incount, int hidcount, int outcount)
         {
             NumLayers = numlayers;
             INCount = incount; NCount = hidcount; ONCount = outcount; LearningRate = learningrate;
         }
         public NN() { }
-        public bool Vs(NN competitor, bool isW)
+        public bool Vs(NN competitor)
         {
             Board Compitition = new Board(new Player(true), new Player(false), new Piece[8, 8], true).initBoard();
             int movecount = 0;
@@ -41,46 +48,60 @@ namespace GeneticChess
                 //Ensure nothing goes wrong
                 if (Compitition is null) { break; }
 
-                if (isW == Compitition.WTurn) { Compitition = Move(Compitition, isW); }
-                else { Compitition = competitor.Move(Compitition, !isW); }
+                if (player.IsW == Compitition.WTurn) { Compitition = Move(Compitition); ActiveForm.ActiveBoard = Serializer.DeepClone(Compitition); }
+                else { Compitition = competitor.Move(Compitition); ActiveForm.ActiveBoard = Serializer.DeepClone(Compitition); }
                 movecount++;
             }
             //Award win to the victor
-            if ((isW && Compitition.WWin) || (!isW && Compitition.BWin)) { return true; }
-            if ((!isW && Compitition.WWin) || (isW && Compitition.BWin)) { return false; }
+            if ((player.IsW && Compitition.WWin) || (!player.IsW && Compitition.BWin)) { return true; }
+            if ((!player.IsW && Compitition.WWin) || (player.IsW && Compitition.BWin)) { return false; }
             //If stale winner is non-competitor by default
             if (movecount < MaxMoves) { return true; }
             //If it broke without anything happening something went wrong
             throw new Exception("Unknown board state");
         }
-        public Board Move(Board board, bool wTurn)
+        public Board Move(Board board)
         {
             double maxscore = double.MinValue;
             Board bestBoard = null;
-            List<Board> possibilities = board.GenMoves(wTurn);
-            if (possibilities.Count == 0) { /*forfeit*/ }
+            List<Board> possibilities = board.GenMoves(board.WTurn);
             foreach (Board b in possibilities)
             {
                 //Ignore checked board states
-                if (b.Checks(player.IsW)) { continue; }
+                foreach (Piece p in board.Pieces)
+                {
+                    if (p is King && p.Player.IsW == b.WTurn)
+                    {
+                        if ((p as King).Check(board)) { goto endloop; }
+                    }
+                }
                 var score = Score(b);
                 if (score > maxscore) { score = maxscore; bestBoard = b; }
+                //Bypass outer loop if a check is found
+            endloop:;
             }
             //If no boards are found then they lose
-            if (bestBoard == null) { if (player.IsW) { bestBoard.BWin = true; } else { bestBoard.WWin = true; } }
+            if (bestBoard is null)
+            {
+                if (player.IsW) { board.BWin = true; }
+                else { board.WWin = true; }
+                return board;
+            }
             return bestBoard;
         }
         public double Score(Board board)
         {
             var input = new double[8, 8];
-            //Flip board to always have self at bottom for scoring purposes
-            if (!player.IsW) { board.Pieces = ArrayInverse(board.Pieces); }
+            //Flip a copy of the board to always have self at bottom for scoring purposes
+            Piece[,] temp;
+            if (player.IsW) { temp = Serializer.DeepClone(board.Pieces); }
+            else { temp = ArrayInverse(board.Pieces); }
             for (int i = 0; i < 8; i++)
             {
                 for (int ii = 0; ii < 8; ii++)
                 {
                     //Set piece values equal to standard chess piece values
-                    Piece p = board.Pieces[i, ii];
+                    Piece p = temp[i, ii];
                     //Don't have to set empty piece = 0 b/c array initialization does it automatically
                     if (p is Empty) { continue; }
                     if (p is Pawn) { input[i, ii] = 1; }
@@ -140,7 +161,7 @@ namespace GeneticChess
             {
                 for (int ii = 0; ii < matrix.GetLength(1); ii++)
                 {
-                    matrixinverse[i, ii] = matrix[ii, i];
+                    matrixinverse[i, ii] = matrix[7 - i, 7 - ii];
                 }
             }
             return matrixinverse;
