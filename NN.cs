@@ -56,7 +56,7 @@ namespace GeneticChess
             if ((player.IsW && Compitition.WWin) || (!player.IsW && Compitition.BWin)) { return true; }
             if ((!player.IsW && Compitition.WWin) || (player.IsW && Compitition.BWin)) { return false; }
             //If stale winner is non-competitor by default
-            if (movecount < MaxMoves) { return true; }
+            if (movecount >= MaxMoves) { return true; }
             //If it broke without anything happening something went wrong
             throw new Exception("Unknown board state");
         }
@@ -64,21 +64,11 @@ namespace GeneticChess
         {
             double maxscore = double.MinValue;
             Board bestBoard = null;
-            List<Board> possibilities = board.GenMoves(board.WTurn);
+            List<Board> possibilities = board.GenMoves(board.WTurn, true);
             foreach (Board b in possibilities)
             {
-                //Ignore checked board states
-                foreach (Piece p in board.Pieces)
-                {
-                    if (p is King && p.Player.IsW == b.WTurn)
-                    {
-                        if ((p as King).Check(board)) { goto endloop; }
-                    }
-                }
                 var score = Score(b);
                 if (score > maxscore) { score = maxscore; bestBoard = b; }
-                //Bypass outer loop if a check is found
-            endloop:;
             }
             //If no boards are found then they lose
             if (bestBoard is null)
