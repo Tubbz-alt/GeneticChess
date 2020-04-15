@@ -126,7 +126,7 @@ namespace GeneticChess
             board.WTurn = !board.WTurn;
             return board;
         }
-        public List<Board> GenMoves(bool wturn)
+        public List<Board> GenMoves(bool wturn, bool removeChecks)
         {
             var boards = new List<Board>();
             //Reset enpass availiblity on each turn's passing
@@ -148,10 +148,24 @@ namespace GeneticChess
                 if (p is Queen) { v = (p as Queen).GenerateMoves(this); }
                 if (p is Bishop) { v = (p as Bishop).GenerateMoves(this); }
 
-
-                foreach (Board b in v)
+                if (removeChecks)
                 {
-                    boards.Add(b);
+                    foreach (Board b in v)
+                    {
+                        //don't add the board if the king is in check or isn't present
+                        bool noking = true;
+                        foreach (Piece p2 in b.Pieces)
+                        {
+                            if (p2 is King && p2.Player.IsW == wturn)
+                            {
+                                noking = false;
+                                if ((p2 as King).Check(b)) { goto next; }
+                            }
+                        }
+                        if (noking) { goto next; }
+                        boards.Add(b);
+                    next:;
+                    }
                 }
             }
             return boards;
