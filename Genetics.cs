@@ -17,20 +17,36 @@ namespace GeneticChess
         /// <summary>
         /// Initializes the genetics class
         /// </summary>
-        /// <param name="Load">Whether or not to load weights and biases from file</param>
+        /// <param name="load">Whether or not to load weights and biases from file</param>
         /// <param name="ps">Population size</param>
         /// <param name="sp">Likelyhood of survival between generations (per individual)</param>
         /// <param name="src">How much more likely the strong are to survive than the weak (exponentially)</param>
         /// <param name="mp">How likely mutations are to occur (gene by gene)</param>
         /// <param name="af">The currently active form (a lazy workaround to update the board)</param>
-        public Genetics(bool Load, int ps, double sp, double src, double mp, Form1 af)
+        public Genetics(bool load, int ps, double sp, double src, double mp, Form1 af)
         {
             NN.ActiveForm = af;
             PopSize = ps; SurvivalProportion = sp; SurvivalRateChange = src; MutationProportion = mp;
             //Initialize population
-            NNs = new NN[PopSize];
-            if (!Load) { for (int i = 0; i < PopSize; i++) { NNs[i] = new NN(); NNs[i].Init(); } }
-            else { for (int i = 0; i < PopSize; i++) { NNs[i] = IO.Read(i); } }
+            if (!load) { NNs = GeneratePopulation(PopSize); }
+            else { NNs = Load(); }
+        }
+        public void Save()
+        {
+            //Save population
+            for (int i = 0; i < PopSize; i++)
+            {
+                IO.Write(NNs[i], i);
+            }
+        }
+        public NN[] Load()
+        {
+            var nns = new NN[PopSize];
+            for (int i = 0; i < PopSize; i++) 
+            { 
+                nns[i] = IO.Read(i);
+            }
+            return nns;
         }
         public void Evolve()
         {
@@ -40,11 +56,7 @@ namespace GeneticChess
             //Selection, propegation, mutation
             NNs = Propegate();
 
-            //Save population
-            for (int i = 0; i < PopSize; i++)
-            {
-                IO.Write(NNs[i], i);
-            }
+            Save();
         }
         //Quicksort!
         public NN[] Tournament()
@@ -132,6 +144,7 @@ namespace GeneticChess
                 nn.Init();
                 nns[i] = nn;
             }
+            Save();
             return nns;
         }
     }
