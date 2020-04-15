@@ -122,7 +122,7 @@ namespace GeneticChess
                 try
                 {
                     if (ActiveBoard.WTurn != ActiveBoard.Pieces[priorSquare[1], priorSquare[0]].Player.IsW) { throw new Exception("Not your turn"); }
-                    List<Board> possibilities = ActiveBoard.GenMoves(ActiveBoard.WTurn);
+                    List<Board> possibilities = ActiveBoard.GenMoves(ActiveBoard.WTurn, false);
                     //Need to redo (the pieces can't be the same if they're on different squares lol)
                     foreach (Board b in possibilities) { if (b.Pieces[priorSquare[1], priorSquare[0]] is Empty && b.Pieces[currentSquare[1], currentSquare[0]].ValidMoveType(ActiveBoard.Pieces[priorSquare[1], priorSquare[0]]))
                             //If the piece moved is the same on both boards then the boards are the same
@@ -158,7 +158,7 @@ namespace GeneticChess
             new Thread(() =>
             {
                 var tempboard = Serializer.DeepClone(ActiveBoard);
-                var genetics = new Genetics(false, 5, .5, 1.2, .1, this);
+                var genetics = new Genetics(true, 5, .5, 1.2, .1, this);
                 genetics.Evolve();
                 /*
                 NN nn1 = new NN().Init(); NN nn2 = new NN().Init();
