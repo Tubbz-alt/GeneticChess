@@ -16,7 +16,7 @@ namespace GeneticChess
             NN nn = new NN();
             if (Running) { throw new Exception("Already accessing file"); }
             Running = true;
-            FileStream fs = new FileStream(BasePath + num.ToString() + ".txt", FileMode.Open, FileAccess.Read, FileShare.None);
+            FileStream fs = new FileStream(BasePath + "\\" + num.ToString() + ".txt", FileMode.Open, FileAccess.Read, FileShare.None);
             StreamReader sr = new StreamReader(fs);
             string text = sr.ReadToEnd();
             sr.Close(); fs.Close();
@@ -25,7 +25,7 @@ namespace GeneticChess
             int numlayers = int.Parse(split[0]);
             nn.Layers = new List<Layer>();
 
-            int iterator = 0;
+            int iterator = 1;
             for (int j = 0; j < numlayers; j++)
             {
                 int length = int.Parse(split[iterator]); iterator++;
@@ -47,10 +47,9 @@ namespace GeneticChess
         }
         public static void Write(NN nn, int num)
         {
-            if (Running) { throw new Exception("Already accessing file"); }
-            Running = true;
-            FileStream fs = new FileStream(BasePath + num.ToString() + ".txt", FileMode.Create, FileAccess.Write, FileShare.None);
+            FileStream fs = new FileStream(BasePath + "\\" + num.ToString() + ".txt", FileMode.Create, FileAccess.Write, FileShare.None);
             StreamWriter sw = new StreamWriter(fs);
+            sw.Write(nn.NumLayers + " ");
             foreach (Layer l in nn.Layers)
             {
                 sw.Write(l.Length + " " + l.InputLength + " ");
@@ -64,7 +63,6 @@ namespace GeneticChess
                 }
             }
             sw.Close(); fs.Close();
-            Running = false;
         }
     }
 }
