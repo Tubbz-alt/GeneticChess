@@ -158,7 +158,8 @@ namespace GeneticChess
             new Thread(() =>
             {
                 var tempboard = Serializer.DeepClone(ActiveBoard);
-                var genetics = new Genetics(true, 5, .5, 1.2, .1, this);
+                //True to load, false to reset weights and biases
+                var genetics = new Genetics(false, 15, .95, 1.1, .05, this);
                 genetics.Evolve();
                 /*
                 NN nn1 = new NN().Init(); NN nn2 = new NN().Init();
