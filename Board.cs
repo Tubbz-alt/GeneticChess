@@ -167,6 +167,13 @@ namespace GeneticChess
                     next:;
                     }
                 }
+                else
+                {
+                    foreach (Board b in v)
+                    {
+                        boards.Add(b);
+                    }
+                }
             }
             return boards;
         }
