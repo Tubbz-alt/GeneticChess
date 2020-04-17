@@ -8,8 +8,8 @@ namespace GeneticChess
     class NN
     {
         static int Resolution = 8;
-        public int NumLayers = 5;
-        public int INCount = 16;
+        public int NumLayers = 3;
+        public int INCount = 4;
         public int NCount = 8;
         public int ONCount = 1;
         public List<Layer> Layers { get; set; }
@@ -18,7 +18,7 @@ namespace GeneticChess
         public static double RMSDecay = .9;
         public static bool UseMomentum = false;
         public static bool UseRMSProp = true;
-        public int MaxMoves = 50;
+        public int MaxMoves = 100;
         public double TrialNum = 0;
         public double AvgGradient = 0;
         public double PercCorrect = 0;
@@ -55,8 +55,11 @@ namespace GeneticChess
             //Award win to the victor
             if ((player.IsW && Compitition.WWin) || (!player.IsW && Compitition.BWin)) { return true; }
             if ((!player.IsW && Compitition.WWin) || (player.IsW && Compitition.BWin)) { return false; }
-            //If stale winner is non-competitor by default
-            if (movecount >= MaxMoves) { return true; }
+            //If a stalemate occurs, give the win to the NN with more pieces left
+            if (movecount >= MaxMoves) 
+            {
+                if (Score(Compitition, false) > 0) { return true; } return false;
+            }
             //If it broke without anything happening something went wrong
             throw new Exception("Unknown board state");
         }
@@ -67,7 +70,7 @@ namespace GeneticChess
             List<Board> possibilities = board.GenMoves(board.WTurn, true);
             foreach (Board b in possibilities)
             {
-                var score = Score(b);
+                var score = Score(b, true);
                 if (score > maxscore) { score = maxscore; bestBoard = b; }
             }
             //If no boards are found then they lose
@@ -79,13 +82,13 @@ namespace GeneticChess
             }
             return bestBoard;
         }
-        public double Score(Board board)
+        public double Score(Board board, bool useNeurons)
         {
             var input = new double[8, 8];
             //Flip a copy of the board to always have self at bottom for scoring purposes
-            Piece[,] temp;
-            if (player.IsW) { temp = Serializer.DeepClone(board.Pieces); }
-            else { temp = ArrayInverse(board.Pieces); }
+            Piece[,] temp = Serializer.DeepClone(board.Pieces);
+            /*if (player.IsW) { temp = Serializer.DeepClone(board.Pieces); }
+            else { temp = ArrayInverse(board.Pieces); }*/
             for (int i = 0; i < 8; i++)
             {
                 for (int ii = 0; ii < 8; ii++)
@@ -98,15 +101,25 @@ namespace GeneticChess
                     if (p is Knight || p is Bishop) { input[i, ii] = 3; }
                     if (p is Rook) { input[i, ii] = 5; }
                     if (p is Queen) { input[i, ii] = 9; }
-                    if (p is King) { input[i, ii] = 99; }
+                    if (p is King) { input[i, ii] = 15; }
 
                     //Set opposite color piece values to negative
                     if (p.Player.IsW != player.IsW) { input[i, ii] *= -1; }
                 }
             }
-            //Normalize everything
-            input = ActivationFunctions.Normalize(input, 8, 8);
-            return Run(input);
+            if (useNeurons)
+            { 
+                //Normalize everything
+                input = ActivationFunctions.Normalize(input, 8, 8);
+                return Run(input);
+            }
+            //Count the value of pieces left on the board
+            else
+            {
+                int sum = 0;
+                foreach (int i in input) { sum += i; }
+                return sum;
+            }
         }
         public NN Init()
         {
