@@ -31,12 +31,12 @@ namespace GeneticChess
             if (!load) { NNs = GeneratePopulation(PopSize); }
             else { NNs = Load(); }
         }
-        public void Save()
+        public void Save(NN[] nns)
         {
             //Save population
             for (int i = 0; i < PopSize; i++)
             {
-                IO.Write(NNs[i], i);
+                IO.Write(nns[i], i);
             }
         }
         public NN[] Load()
@@ -56,13 +56,13 @@ namespace GeneticChess
             //Selection, propegation, mutation
             NNs = Propegate();
 
-            Save();
+            Save(NNs);
         }
         //Quicksort!
         public NN[] Tournament()
         {
             //Sort NNs
-            NNs = Quicksort.Quick(NNs, 0, NNs.Length - 1);
+            Quicksort.Quick(NNs, 0, NNs.Length - 1);
             return NNs;
         }
         public NN[] Propegate()
@@ -129,10 +129,9 @@ namespace GeneticChess
             int mutationLayer = r.Next(0, patient.Layers.Count);
             int mutationPointX = r.Next(0, patient.Layers[mutationLayer].Weights.GetLength(0));
             int mutationPointY = r.Next(0, patient.Layers[mutationLayer].Weights.GetLength(1));
-            //Random mutation with Lecun initialization
+            //"Flip the bit" so to speak to mutate
             patient.Layers[mutationLayer].Weights[mutationPointX, mutationPointY]
-                = (r.NextDouble() > .5 ? -1 : 1) * r.NextDouble() *
-                Math.Sqrt(3d / (double)(patient.Layers[mutationLayer].InputLength * patient.Layers[mutationLayer].InputLength));
+                = 1d - patient.Layers[mutationLayer].Weights[mutationPointX, mutationPointY];
             return patient;
         }
         public NN[] GeneratePopulation(int popsize)
@@ -144,7 +143,7 @@ namespace GeneticChess
                 nn.Init();
                 nns[i] = nn;
             }
-            Save();
+            Save(nns);
             return nns;
         }
     }
