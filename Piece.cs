@@ -210,7 +210,7 @@ namespace GeneticChess
             var pairs = new int[8, 2] {
                 { 2, 1 }, { 2, -1 }, { -2, 1 }, { -2, -1  }, { 1, -2 }, { 1, 2 }, { -1, 2 }, { -1, -2  }
             };
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i <= 7; i++)
             {
                 //If the knight is moving off the board it's invalid
                 if (PosY + pairs[i, 1] > 7 || PosX + pairs[i, 0] > 7 || PosY + pairs[i, 1] < 0 || PosX + pairs[i, 0] < 0) { continue; }
@@ -428,7 +428,7 @@ namespace GeneticChess
             var pairs = new int[8, 2] {
                 { 2, 1 }, { 2, -1 }, { -2, 1 }, { -2, -1  }, { 1, -2 }, { 1, 2 }, { -1, 2 }, { -1, -2  }
             };
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i <= 7; i++)
             {
                 //If the "L" is off the board it's invalid
                 if (PosY + pairs[i, 1] > 7 || PosX + pairs[i, 0] > 7 || PosY + pairs[i, 1] < 0 || PosX + pairs[i, 0] < 0) { continue; }
